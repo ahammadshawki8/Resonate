@@ -1,0 +1,75 @@
+name: resonate_flutter
+description: "Resonate - Your voice speaks louder than words. A personal emotional wellness butler."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+  
+  # Navigation
+  go_router: ^13.0.0
+  
+  # UI Components
+  flutter_animate: ^4.3.0
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+  flutter_svg: ^2.0.9
+  lottie: ^3.0.0
+  
+  # Charts & Visualization
+  fl_chart: ^0.66.0
+  table_calendar: ^3.0.9
+  
+  # Audio Recording (disabled for now - add back when implementing actual recording)
+  # record: ^5.0.4
+  # just_audio: ^0.9.36
+  # audio_waveforms: ^1.0.5
+  
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.2.2
+  shared_preferences: ^2.2.2
+  # permission_handler: ^11.1.0  # Disabled - causes Windows build issues
+  path_provider: ^2.1.2
+  
+  # Icons
+  iconsax: ^0.0.8
+  
+  # Responsive
+  flutter_screenutil: ^5.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  riverpod_generator: ^2.3.9
+  build_runner: ^2.4.8
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    # - assets/icons/     # Uncomment when icons are added
+    # - assets/animations/ # Uncomment when animations are added
+  
+  # fonts:
+  #   - family: Nunito
+  #     fonts:
+  #       - asset: assets/fonts/Nunito-Regular.ttf
+  #       - asset: assets/fonts/Nunito-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Nunito-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Nunito-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Nunito-ExtraBold.ttf
+  #         weight: 800

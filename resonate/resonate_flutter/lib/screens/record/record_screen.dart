@@ -1,0 +1,646 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/theme/app_colors.dart';
+import '../../providers/app_providers.dart';
+import '../../data/models/models.dart';
+
+class RecordScreen extends ConsumerStatefulWidget {
+  const RecordScreen({super.key});
+
+  @override
+  ConsumerState<RecordScreen> createState() => _RecordScreenState();
+}
+
+class _RecordScreenState extends ConsumerState<RecordScreen>
+    with TickerProviderStateMixin {
+  bool _isRecording = false;
+  bool _isAnalyzing = false;
+  int _recordingSeconds = 0;
+  Timer? _timer;
+  final List<double> _waveformData = [];
+  final Random _random = Random();
+  String _selectedLanguage = 'English';
+
+  final List<String> _sampleTranscripts = [
+    "I've been feeling really productive today. Managed to complete most of my tasks and even had time for a nice walk outside. The weather was perfect.",
+    "Work has been a bit stressful lately, but I'm trying to stay positive. I talked to my friend today and it really helped me feel better.",
+    "Just spent some time with family and it was wonderful. We shared stories and laughed a lot. These moments mean so much to me.",
+    "I've been feeling a bit overwhelmed with everything going on. Need to take more breaks and practice self-care.",
+    "Today was a good day! I learned something new and felt really accomplished. Looking forward to tomorrow.",
+  ];
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startRecording() {
+    ref.read(recordingProvider.notifier).startRecording();
+    setState(() {
+      _isRecording = true;
+      _recordingSeconds = 0;
+      _waveformData.clear();
+    });
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _recordingSeconds++;
+        // Add fake waveform data
+        for (int i = 0; i < 5; i++) {
+          _waveformData.add(_random.nextDouble() * 0.8 + 0.2);
+        }
+      });
+
+      // Auto-stop after 60 seconds
+      if (_recordingSeconds >= 60) {
+        _stopRecording();
+      }
+    });
+  }
+
+  void _stopRecording() {
+    _timer?.cancel();
+    ref.read(recordingProvider.notifier).stopRecording();
+
+    if (_recordingSeconds < 5) {
+      // Too short
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please record for at least 5 seconds'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        ),
+      );
+      setState(() {
+        _isRecording = false;
+        _recordingSeconds = 0;
+        _waveformData.clear();
+      });
+      return;
+    }
+
+    setState(() {
+      _isRecording = false;
+      _isAnalyzing = true;
+    });
+
+    // Simulate analysis and generate result
+    _performAnalysis();
+  }
+
+  Future<void> _performAnalysis() async {
+    // Simulate analysis steps with delays
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    setState(() {}); // Refresh to show first step complete
+
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+
+    // Generate mock analysis result
+    final moodScore = 0.4 + _random.nextDouble() * 0.5; // 0.4 - 0.9
+    final transcript =
+        _sampleTranscripts[_random.nextInt(_sampleTranscripts.length)];
+
+    // Generate detailed emotions based on mood score
+    final detailedEmotions =
+        EmotionLibrary.getEmotionsForMoodScore(moodScore, count: 4);
+    final emotions = detailedEmotions.map((e) => e.name.toLowerCase()).toList();
+
+    // Generate personalized response based on emotions
+    final personalizedResponse =
+        PersonalizedResponse.generate(detailedEmotions, moodScore);
+
+    final result = AnalysisResult(
+      moodScore: moodScore,
+      moodLabel: _getMoodLabel(moodScore),
+      transcript: transcript,
+      emotions: emotions,
+      detailedEmotions: detailedEmotions,
+      personalizedResponse: personalizedResponse,
+      confidence: 0.85 + _random.nextDouble() * 0.1,
+      acousticScore: moodScore - 0.05 + _random.nextDouble() * 0.1,
+      semanticScore: moodScore + 0.03 - _random.nextDouble() * 0.1,
+      language: 'en',
+      duration: _recordingSeconds.toDouble(),
+    );
+
+    // Store the result
+    ref.read(analysisResultProvider.notifier).state = result;
+
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      context.go('/result');
+    }
+  }
+
+  String _getMoodLabel(double score) {
+    if (score >= 0.8) return 'Very Positive';
+    if (score >= 0.6) return 'Positive';
+    if (score >= 0.4) return 'Neutral';
+    if (score >= 0.2) return 'Low';
+    return 'Very Low';
+  }
+
+  void _showLanguageSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.cardDark : Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.dividerDark : AppColors.divider,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              'Select Language',
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            _buildLanguageOption('🇺🇸', 'English'),
+            SizedBox(height: 12.h),
+            _buildLanguageOption('🇧🇩', 'বাংলা'),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 16.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(String flag, String language) {
+    final isSelected = _selectedLanguage == language;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedLanguage = language);
+        Navigator.pop(context);
+      },
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.1)
+              : AppColors.background,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(flag, style: TextStyle(fontSize: 24.sp)),
+            SizedBox(width: 16.w),
+            Text(
+              language,
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              Icon(Icons.check_circle, color: AppColors.primary, size: 24.sp),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    final mins = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isAnalyzing) {
+      return _buildAnalyzingScreen();
+    }
+
+    return Scaffold(
+      body: Builder(builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: EdgeInsets.all(20.w),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.cardDark : Colors.white,
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: AppColors.textPrimary,
+                          size: 24.sp,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    // Language selector
+                    GestureDetector(
+                      onTap: _showLanguageSelector,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 16.w, vertical: 8.h),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              _selectedLanguage == 'English' ? '🇺🇸' : '🇧🇩',
+                              style: TextStyle(fontSize: 18.sp),
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              _selectedLanguage,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 20.sp,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Main content
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Emoji and prompt
+                  if (!_isRecording) ...[
+                    Text(
+                      '🎤',
+                      style: TextStyle(fontSize: 64.sp),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.1, 1.1),
+                          duration: 1500.ms,
+                        ),
+                    SizedBox(height: 24.h),
+                    Text(
+                      'Tap to start recording',
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Speak naturally for 30-60 seconds',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ] else ...[
+                    // Recording indicator
+                    _buildWaveform(),
+                    SizedBox(height: 32.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 12.w,
+                          height: 12.w,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .fadeIn(duration: 600.ms),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Recording...',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      _formatDuration(_recordingSeconds),
+                      style: TextStyle(
+                        fontSize: 48.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+
+              const Spacer(),
+
+              // Record button
+              GestureDetector(
+                onTap: _isRecording ? _stopRecording : _startRecording,
+                child: Container(
+                  width: 100.w,
+                  height: 100.w,
+                  decoration: BoxDecoration(
+                    gradient: _isRecording
+                        ? LinearGradient(
+                            colors: [Colors.red.shade400, Colors.red.shade600],
+                          )
+                        : AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_isRecording ? Colors.red : AppColors.primary)
+                            .withOpacity(0.4),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(
+                      _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                      color: Colors.white,
+                      size: 48.sp,
+                    ),
+                  ),
+                ).animate(target: _isRecording ? 1 : 0).custom(
+                      duration: 600.ms,
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: 1 + sin(value * 3.14159) * 0.05,
+                          child: child,
+                        );
+                      },
+                    ),
+              ),
+
+              SizedBox(height: 20.h),
+
+              // Hint text
+              Text(
+                _isRecording ? 'Tap to stop' : 'Press and hold to record',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+
+              SizedBox(height: 48.h),
+
+              // Tips section
+              if (!_isRecording)
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 24.w),
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        '💡',
+                        style: TextStyle(fontSize: 24.sp),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          'Talk about how your day went, what\'s on your mind, or just express yourself freely.',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: AppColors.textSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              SizedBox(height: 32.h),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildWaveform() {
+    return SizedBox(
+      height: 100.h,
+      width: double.infinity,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(
+          min(30, _waveformData.length),
+          (index) {
+            final dataIndex = _waveformData.length - 30 + index;
+            final height = dataIndex >= 0 && dataIndex < _waveformData.length
+                ? _waveformData[dataIndex] * 80.h
+                : 10.h;
+
+            return Container(
+              margin: EdgeInsets.symmetric(horizontal: 2.w),
+              width: 4.w,
+              height: height,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalyzingScreen() {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animated analyzing icon
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 150.w,
+                    height: 150.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                      .animate(onPlay: (c) => c.repeat())
+                      .scale(
+                        begin: const Offset(1, 1),
+                        end: const Offset(1.2, 1.2),
+                        duration: 1500.ms,
+                      )
+                      .fadeOut(duration: 1500.ms),
+                  Container(
+                    width: 120.w,
+                    height: 120.w,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '🔮',
+                        style: TextStyle(fontSize: 48.sp),
+                      ),
+                    ),
+                  ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                        begin: const Offset(1, 1),
+                        end: const Offset(1.05, 1.05),
+                        duration: 800.ms,
+                      ),
+                ],
+              ),
+
+              SizedBox(height: 40.h),
+
+              Text(
+                'Analyzing your voice...',
+                style: TextStyle(
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Analysis steps
+              _buildAnalysisStep('Extracting acoustic features', true),
+              _buildAnalysisStep('Transcribing speech', true),
+              _buildAnalysisStep('Analyzing sentiment', false),
+              _buildAnalysisStep('Generating insights', false),
+
+              SizedBox(height: 32.h),
+
+              SizedBox(
+                width: 200.w,
+                child: LinearProgressIndicator(
+                  backgroundColor: AppColors.divider,
+                  valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalysisStep(String text, bool completed) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (completed)
+            Icon(
+              Icons.check_circle,
+              color: AppColors.success,
+              size: 18.sp,
+            ).animate().scale(
+                begin: const Offset(0, 0),
+                end: const Offset(1, 1),
+                duration: 300.ms)
+          else
+            SizedBox(
+              width: 18.sp,
+              height: 18.sp,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(AppColors.primary),
+              ),
+            ),
+          SizedBox(width: 10.w),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: completed ? AppColors.success : AppColors.textSecondary,
+              fontWeight: completed ? FontWeight.w500 : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
