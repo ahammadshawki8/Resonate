@@ -12,6 +12,7 @@ Resonate is a personal emotional wellness butler that uses **multi-modal analysi
 - [Key Features](#key-features)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
+- [Frontend Implementation Status](#frontend-implementation-status)
 - [Frontend Screens](#frontend-screens)
 - [API Endpoints](#api-endpoints)
 - [Database Schema](#database-schema)
@@ -61,28 +62,94 @@ Mental health tracking is hard. Journaling feels like a chore. Mood apps require
 
 | Feature | Description |
 |---------|-------------|
-| 🎙️ **Daily Voice Check-in** | Record a 30-second voice memo about your day |
-| � **Acoustic Analysis** | Analyze pitch, energy, tempo, pauses from your voice |
+| 🎙️ **Daily Voice Check-in** | Record a voice memo (5-60 seconds) about your day |
+| 🔊 **Acoustic Analysis** | Analyze pitch, energy, tempo, pauses from your voice |
 | 📝 **Semantic Analysis** | Transcribe and understand context (emotion keywords, sentiment) |
 | 📊 **Fusion Mood Score** | Combined score from both acoustic + semantic signals |
 | 📅 **Mood Calendar** | Visual heatmap of your emotional journey over time |
-| 📈 **Trend Charts** | Weekly/monthly mood trend visualization |
+| 📈 **Trend Charts** | Weekly/monthly mood trend visualization with fl_chart |
 | 🔍 **Pattern Detection** | Automatic detection of emotional patterns |
-| 💡 **AI Insights** | Groq-powered observations and suggestions |
+| 💡 **AI Insights** | Groq-powered observations and personalized suggestions |
 | 🔐 **Privacy Controls** | Choose what data is stored (audio, transcript, keywords, or features only) |
+
+### Wellness Features (Implemented)
+
+| Feature | Description |
+|---------|-------------|
+| 🌬️ **Breathing Exercises** | Guided 4-7-8 breathing technique with visual animation |
+| 📓 **Quick Journal** | Mood-based journal prompts with save functionality |
+| 🧘 **Guided Meditation** | Multiple types: Quick Reset, Body Scan, Loving Kindness, Sleep |
+| 🎵 **Mood-based Music** | Curated playlists: Calm, Uplifting, Focus, Energizing with player |
+| 📞 **Call Someone** | Quick access to supportive contacts when needed |
+| 💪 **Workout Sessions** | Guided workouts: Stretching, Dance, HIIT, Walking |
+| 🙏 **Gratitude Practice** | Daily gratitude journaling with prompts |
+| 🎯 **Goal Setting** | Set and track wellness goals |
 
 ### Enhanced Features
 
 | Feature | Description |
 |---------|-------------|
-| � **Bilingual Voice Support** | Speak in English or Bengali - both fully supported |
+| 🌍 **Bilingual Voice Support** | Speak in English or Bengali - both fully supported |
 | 🏷️ **Auto-detected Topics** | Automatic context detection (work, family, health, etc.) |
 | 🏷️ **Context Tags** | Manually tag entries with custom context |
-| 😢 **Emotion Keywords** | Extracted emotion words from your speech |
+| 😢 **Emotion Detection** | Detailed emotion analysis with visual breakdown |
 | 🔔 **Smart Reminders** | Personalized reminder based on your optimal check-in time |
 | 📤 **Export Data** | Export your mood data for personal records |
-| 🌙 **Dark Mode** | Eye-friendly dark theme |
+| 🌙 **Dark Mode** | Eye-friendly dark theme throughout the app |
 | 🌐 **Multi-language UI** | Interface in English and Bengali (বাংলা) |
+| ✨ **Personalized Responses** | AI-generated affirmations and suggestions based on mood |
+| 🎯 **Quick Actions** | Post-save suggestions for wellness activities |
+
+---
+
+## 📱 Frontend Implementation Status
+
+### ✅ Completed (Flutter App)
+
+| Screen/Feature | Status | Description |
+|----------------|--------|-------------|
+| Splash Screen | ✅ Done | Animated logo with auth state check |
+| Onboarding (3 slides) | ✅ Done | Introduction to app features |
+| Login/Signup | ✅ Done | Email/password authentication UI |
+| Home Dashboard | ✅ Done | Today's mood, stats, quick actions grid |
+| Voice Recording | ✅ Done | Waveform visualization, 5-60s recording |
+| Analysis Animation | ✅ Done | Step-by-step analysis progress |
+| Result Screen | ✅ Done | Mood display, emotions, tags, save entry |
+| Mood Calendar | ✅ Done | Monthly view with color-coded entries |
+| Entry Detail | ✅ Done | Full entry view with all data |
+| Trends & Analytics | ✅ Done | Charts with fl_chart, pattern display |
+| AI Insights | ✅ Done | Insight cards with personalized tips |
+| Profile & Settings | ✅ Done | User stats, preferences, export |
+| Privacy Settings | ✅ Done | 4-level privacy control UI |
+| Dark Mode | ✅ Done | Full dark theme support |
+| Wellness History | ✅ Done | Journal, gratitude, goals history |
+
+### ✅ Wellness Features (Fully Implemented)
+
+| Feature | Screen | Functionality |
+|---------|--------|---------------|
+| 🌬️ Breathing | Modal | 4-7-8 breathing with animated circle |
+| 📓 Journal | Modal | Mood-based prompts, save to history |
+| 🧘 Meditation | Full Screen | 4 types, timer, guided phases, pause/resume |
+| 🎵 Music Player | Full Screen | Categories, playlist, play/pause, volume, visualizer, "Up Next" sidebar |
+| 📞 Call Someone | Modal | Contact grid, quick-dial simulation |
+| 💪 Workout | Full Screen | 4 types, exercise timer, rest periods, instructions |
+| 🙏 Gratitude | Modal | 3-item gratitude entry, save to history |
+| 🎯 Goals | Modal | Preset goals, custom goals, save to history |
+
+### 🔧 Backend Integration (Pending)
+
+The frontend currently uses **simulated data** for demonstration. Backend integration needed for:
+
+| Feature | Backend Required |
+|---------|-----------------|
+| User Authentication | Serverpod Auth |
+| Voice Upload & Storage | Serverpod + File Storage |
+| Audio Analysis | Python FastAPI (Librosa + Whisper) |
+| Entry Persistence | PostgreSQL via Serverpod |
+| Pattern Detection | Serverpod scheduled jobs |
+| AI Insights | Groq API via Serverpod |
+| Push Notifications | Serverpod + FCM |
 
 ---
 
@@ -298,276 +365,28 @@ flowchart TD
     HOME --> TRENDS[Trends & Analytics]
     HOME --> INSIGHTS[AI Insights]
     HOME --> PROFILE[Profile & Settings]
+    HOME --> WELLNESS[Wellness Activities]
     
     RECORD --> RECORDING[Recording in Progress]
     RECORDING --> ANALYSIS[Analyzing...]
     ANALYSIS --> RESULT[Mood Result]
-    RESULT --> HOME
+    RESULT --> QUICK_ACTIONS[Quick Actions Modal]
+    QUICK_ACTIONS --> HOME
+    
+    WELLNESS --> BREATHING[Breathing Exercise]
+    WELLNESS --> JOURNAL[Journal Entry]
+    WELLNESS --> MEDITATION[Meditation Session]
+    WELLNESS --> MUSIC[Music Player]
+    WELLNESS --> WORKOUT[Workout Session]
+    WELLNESS --> GRATITUDE[Gratitude Entry]
+    WELLNESS --> GOALS[Goal Setting]
+    WELLNESS --> CALL[Call Someone]
     
     CALENDAR --> ENTRY_DETAIL[Entry Detail]
     ENTRY_DETAIL --> CALENDAR
     
-    PROFILE --> REMINDERS[Reminder Settings]
-    PROFILE --> EXPORT[Export Data]
-    PROFILE --> ACCOUNT[Account Settings]
-```
-
-### Screen Details
-
-#### 1. 🚀 Splash Screen
-- App logo animation
-- Auth state check
-- Route to appropriate screen
-
-#### 2. 👋 Onboarding (3 slides)
-| Slide | Title | Description |
-|-------|-------|-------------|
-| 1 | "Your Voice Tells a Story" | Intro to voice-based mood tracking |
-| 2 | "30 Seconds a Day" | How the check-in works |
-| 3 | "Discover Your Patterns" | Preview of insights |
-
-#### 3. 🔐 Login/Signup Screen
-- Email + Password login
-- Google Sign-in button
-- Create account option
-- Forgot password flow
-
-#### 4. 🏠 Home Dashboard
-```
-┌─────────────────────────────────────┐
-│  Good Morning, Shawki! 👋           │
-├─────────────────────────────────────┤
-│  ┌─────────────────────────────┐    │
-│  │   TODAY'S CHECK-IN          │    │
-│  │   [🎙️ Record Now Button]    │    │
-│  │   or                        │    │
-│  │   ✅ Completed at 9:30 AM   │    │
-│  │   Mood: 😊 Positive (0.72)  │    │
-│  └─────────────────────────────┘    │
-├─────────────────────────────────────┤
-│  📅 This Week                       │
-│  [Mon] [Tue] [Wed] [Thu] [Fri]      │
-│   😊    😐    😔    😊    🎙️        │
-├─────────────────────────────────────┤
-│  💡 Latest Insight                  │
-│  "Your energy peaks on Tuesday      │
-│   afternoons. Consider scheduling   │
-│   important tasks then."            │
-├─────────────────────────────────────┤
-│  [Calendar] [Trends] [Insights]     │
-└─────────────────────────────────────┘
-```
-
-#### 5. 🎙️ Record Voice Screen
-```
-┌─────────────────────────────────────┐
-│         Daily Check-in              │
-│                                     │
-│   Language: [English ▼] [Bengali]   │
-│                                     │
-│    ┌───────────────────────┐        │
-│    │                       │        │
-│    │    🎙️ (Waveform)      │        │
-│    │                       │        │
-│    │      00:15 / 00:30    │        │
-│    │                       │        │
-│    └───────────────────────┘        │
-│                                     │
-│    "Tell me about your day..."      │
-│    "আপনার দিন কেমন গেল?"            │
-│                                     │
-│         [⏹️ Stop Recording]          │
-│                                     │
-│  ┌─────────────────────────────┐    │
-│  │ 💡 Tip: Speak naturally about │    │
-│  │ anything. We analyze both HOW  │    │
-│  │ you speak AND what you say.    │    │
-│  └─────────────────────────────┘    │
-└─────────────────────────────────────┘
-```
-
-#### 6. 📊 Mood Result Screen
-```
-┌─────────────────────────────────────┐
-│         Your Mood Today             │
-│                                     │
-│         ┌───────────┐               │
-│         │    😊     │               │
-│         │  Positive │               │
-│         │   0.72    │               │
-│         └───────────┘               │
-│         Confidence: 92%             │
-│                                     │
-├─────────────────────────────────────┤
-│  Voice Analysis                     │
-│  ┌─────────────────────────────┐    │
-│  │ Energy     ████████░░  80%  │    │
-│  │ Calmness   ██████░░░░  60%  │    │
-│  │ Clarity    ███████░░░  70%  │    │
-│  └─────────────────────────────┘    │
-├─────────────────────────────────────┤
-│  Detected Context                   │
-│  ┌─────────────────────────────┐    │
-│  │ Topic: Work meeting           │    │
-│  │ Emotions: excited, hopeful    │    │
-│  │ Sentiment: Positive (+0.7)    │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  Add a note (optional):             │
-│  ┌─────────────────────────────┐    │
-│  │ Had a great meeting today   │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  Tags: [Work] [+Add]                │
-│                                     │
-│         [Save & Continue]           │
-└─────────────────────────────────────┘
-```
-
-#### 7. 📅 Mood Calendar Screen
-```
-┌─────────────────────────────────────┐
-│  ←  January 2026  →                 │
-├─────────────────────────────────────┤
-│  Mon Tue Wed Thu Fri Sat Sun        │
-│                   1   2   3   4     │
-│                   🟢  🟡  🟢  ⚪     │
-│   5   6   7   8   9  10  11         │
-│   🟢  🟡  🔴  🟡  🟢  🟢  ⚪         │
-│  12  13  14  15  16  17  18         │
-│   🟡  🟢  🟢  🟡  🔴  🟡  ⚪         │
-│  19  20  21  22  23  24  25         │
-│   🟢  🟢  🟡  📍  ⚪  ⚪  ⚪         │
-│  26  27  28  29  30  31             │
-│   ⚪  ⚪  ⚪  ⚪  ⚪  ⚪              │
-├─────────────────────────────────────┤
-│  Legend:                            │
-│  🟢 Positive  🟡 Neutral  🔴 Low    │
-│  ⚪ No entry  📍 Today              │
-├─────────────────────────────────────┤
-│  📊 Monthly Average: 0.65 (Positive)│
-└─────────────────────────────────────┘
-```
-
-#### 8. 📈 Trends Screen
-```
-┌─────────────────────────────────────┐
-│  Trends & Analytics                 │
-│  [Week] [Month] [Year]              │
-├─────────────────────────────────────┤
-│                                     │
-│  Mood Score Over Time               │
-│  ┌─────────────────────────────┐    │
-│  │     📈 Line Chart            │    │
-│  │  1.0 ─                       │    │
-│  │      │    ╱╲      ╱╲        │    │
-│  │  0.5 ─   ╱  ╲    ╱  ╲       │    │
-│  │      │  ╱    ╲  ╱    ╲      │    │
-│  │  0.0 ─ ╱      ╲╱            │    │
-│  │      Mon Tue Wed Thu Fri    │    │
-│  └─────────────────────────────┘    │
-│                                     │
-├─────────────────────────────────────┤
-│  Voice Metrics                      │
-│  ┌──────────┐ ┌──────────┐          │
-│  │ Energy   │ │ Tempo    │          │
-│  │ ↑ 12%    │ │ ↓ 5%     │          │
-│  └──────────┘ └──────────┘          │
-├─────────────────────────────────────┤
-│  Patterns Detected                  │
-│  • Energy peaks on Tuesdays         │
-│  • Lower mood after 8pm             │
-│  • Calmer on weekends               │
-└─────────────────────────────────────┘
-```
-
-#### 9. 💡 Insights Screen
-```
-┌─────────────────────────────────────┐
-│  AI Insights                        │
-├─────────────────────────────────────┤
-│  ┌─────────────────────────────┐    │
-│  │ 🌟 This Week's Insight       │    │
-│  │                             │    │
-│  │ "Your voice energy has been │    │
-│  │ consistently higher in the  │    │
-│  │ mornings. Your most positive│    │
-│  │ entries were on days you    │    │
-│  │ tagged 'exercise'. Consider │    │
-│  │ morning workouts to boost   │    │
-│  │ your mood throughout the    │    │
-│  │ day."                       │    │
-│  │                             │    │
-│  │ Generated: Jan 21, 2026     │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  📜 Previous Insights               │
-│  ├─ Jan 14: Sleep pattern...        │
-│  ├─ Jan 7: Work stress...           │
-│  └─ Dec 31: Holiday boost...        │
-└─────────────────────────────────────┘
-```
-
-#### 10. 👤 Profile & Settings
-```
-┌─────────────────────────────────────┐
-│  Profile                            │
-│  ┌─────────────────────────────┐    │
-│  │  👤 Shawki                   │    │
-│  │  shawki@email.com           │    │
-│  │  Member since Dec 2025      │    │
-│  └─────────────────────────────┘    │
-├─────────────────────────────────────┤
-│  Stats                              │
-│  📊 42 Check-ins                    │
-│  🔥 7 Day Streak                    │
-│  📈 Avg Mood: 0.68                  │
-├─────────────────────────────────────┤
-│  Settings                           │
-│  ├─ 🔔 Reminders          →         │
-│  ├─ 🌙 Dark Mode          [ON]      │
-│  ├─ 🌐 Language           [EN]      │
-│  ├─ 📤 Export Data        →         │
-│  ├─ � Privacy Settings   →         │
-│  └─ ❓ Help & Support     →         │
-├─────────────────────────────────────┤
-│  [Sign Out]                         │
-└─────────────────────────────────────┘
-```
-
-#### 11. 🔐 Privacy Settings Screen
-```
-┌─────────────────────────────────────┐
-│  Privacy Settings                   │
-├─────────────────────────────────────┤
-│  Data Storage Level                 │
-│                                     │
-│  ◉ Full Context (Recommended)       │
-│    Store audio + transcript +       │
-│    features. Best accuracy.         │
-│                                     │
-│  ○ Context Only                     │
-│    Store transcript + features.     │
-│    Audio deleted after processing.  │
-│                                     │
-│  ○ Keywords Only                    │
-│    Store emotion keywords +         │
-│    features. No full transcript.    │
-│                                     │
-│  ○ Acoustic Only                    │
-│    Store only voice features.       │
-│    Most private, lower accuracy.    │
-├─────────────────────────────────────┤
-│  🗑️ Delete All My Data        →     │
-├─────────────────────────────────────┤
-│  Accuracy vs Privacy                │
-│  ┌─────────────────────────────┐    │
-│  │ Full: ~90% accuracy         │    │
-│  │ Context: ~85% accuracy      │    │
-│  │ Keywords: ~80% accuracy     │    │
-│  │ Acoustic: ~70% accuracy     │    │
-│  └─────────────────────────────┘    │
-└─────────────────────────────────────┘
+    PROFILE --> PRIVACY[Privacy Settings]
+    PROFILE --> WELLNESS_HISTORY[Wellness History]
 ```
 
 ---
@@ -1306,43 +1125,49 @@ GROQ_MODEL=llama-3.3-70b-versatile
 
 ## 📁 Project Structure
 
+### Current Implementation (Flutter Frontend)
+
 ```
 resonate/
 │
-├── resonate_flutter/                 # Flutter mobile app
+├── resonate_flutter/                 # Flutter app (✅ IMPLEMENTED)
 │   ├── lib/
-│   │   ├── main.dart
-│   │   ├── app.dart
+│   │   ├── main.dart                 # App entry point with Riverpod
 │   │   ├── core/
-│   │   │   ├── constants/
-│   │   │   ├── theme/
-│   │   │   ├── utils/
-│   │   │   └── extensions/
-│   │   ├── features/
-│   │   │   ├── auth/
-│   │   │   │   ├── data/
-│   │   │   │   ├── domain/
-│   │   │   │   └── presentation/
-│   │   │   ├── home/
-│   │   │   ├── recording/
-│   │   │   ├── calendar/
-│   │   │   ├── trends/
-│   │   │   ├── insights/
-│   │   │   └── profile/
-│   │   ├── shared/
-│   │   │   ├── widgets/
-│   │   │   └── providers/
-│   │   └── services/
-│   │       ├── audio_service.dart
-│   │       └── notification_service.dart
+│   │   │   └── theme/
+│   │   │       └── app_colors.dart   # Color system with mood colors
+│   │   ├── data/
+│   │   │   ├── models/
+│   │   │   │   └── models.dart       # All data models
+│   │   │   └── dummy_data.dart       # Mock data for demo
+│   │   ├── navigation/
+│   │   │   ├── app_router.dart       # GoRouter configuration
+│   │   │   └── main_shell.dart       # Bottom navigation shell
+│   │   ├── providers/
+│   │   │   └── app_providers.dart    # Riverpod providers
+│   │   ├── screens/
+│   │   │   ├── splash/               # Splash screen
+│   │   │   ├── onboarding/           # 3-slide onboarding
+│   │   │   ├── auth/                 # Login & Signup
+│   │   │   ├── home/                 # Dashboard + Quick Actions
+│   │   │   ├── record/               # Recording + Result screens
+│   │   │   ├── calendar/             # Mood calendar + Entry detail
+│   │   │   ├── trends/               # Analytics with fl_chart
+│   │   │   ├── insights/             # AI insights display
+│   │   │   ├── profile/              # User profile
+│   │   │   ├── settings/             # Privacy settings
+│   │   │   └── wellness/             # Wellness activities
+│   │   │       ├── music_player_screen.dart
+│   │   │       ├── meditation_session_screen.dart
+│   │   │       ├── workout_session_screen.dart
+│   │   │       └── wellness_history_screen.dart
+│   │   └── widgets/
+│   │       └── shared_widgets.dart   # Reusable components
 │   ├── assets/
-│   │   ├── images/
-│   │   ├── icons/
-│   │   └── animations/
-│   ├── test/
-│   └── pubspec.yaml
+│   │   └── images/                   # Logo and graphics
+│   └── pubspec.yaml                  # Dependencies
 │
-├── resonate_server/                  # Serverpod backend
+├── resonate_server/                  # Serverpod backend (🔧 PLANNED)
 │   ├── lib/
 │   │   └── src/
 │   │       ├── endpoints/
@@ -1427,7 +1252,66 @@ serverpod deploy
 
 ---
 
+## � Backend Implementation Plan
+
+### Priority 1: Core Backend (Serverpod)
+
+| Task | Endpoint | Description |
+|------|----------|-------------|
+| User Auth | `POST /auth/register`, `/login` | Email/password + Google OAuth |
+| Voice Upload | `POST /voice/upload` | Accept audio file, call Python service |
+| Entry CRUD | `GET/POST/DELETE /entries` | Store and retrieve voice entries |
+| Settings | `GET/PUT /settings` | User preferences and privacy level |
+
+### Priority 2: Python Audio Service (FastAPI)
+
+| Task | Endpoint | Description |
+|------|----------|-------------|
+| Full Analysis | `POST /analyze` | Acoustic + Semantic fusion |
+| Whisper STT | Internal | English + Bengali transcription |
+| Librosa Features | Internal | Pitch, energy, tempo extraction |
+| Sentiment | Internal | TextBlob/NLTK sentiment scoring |
+
+### Priority 3: AI & Patterns
+
+| Task | Service | Description |
+|------|---------|-------------|
+| Pattern Detection | Serverpod Job | Weekly pattern analysis |
+| Insight Generation | Groq API | LLM-powered observations |
+| Push Notifications | FCM | Reminders and insight alerts |
+
+### Simplified Backend Approach
+
+Given the hackathon timeline, consider using a simplified backend:
+
+```
+Option A: Full Serverpod Stack
+├── Serverpod Server (Dart)
+├── PostgreSQL Database
+├── Python FastAPI (Audio Analysis)
+└── Groq API (AI Insights)
+
+Option B: Simplified Stack (Recommended for Hackathon)
+├── Single Python FastAPI Server
+│   ├── SQLite Database (portable)
+│   ├── Librosa + Whisper (audio)
+│   ├── Groq API (insights)
+│   └── Simple JWT Auth
+└── Direct Flutter ↔ Python communication
+```
+
+---
+
 ## 🔮 Future Enhancements
+
+### Phase 1.5 (Backend Integration)
+- [x] Complete Flutter frontend with all screens
+- [x] Wellness activities (meditation, music, workout, journal)
+- [x] Quick actions after saving entries
+- [ ] Serverpod backend with PostgreSQL
+- [ ] Python audio analysis service
+- [ ] Real voice recording and analysis
+- [ ] Groq AI insight generation
 
 ### Phase 2
 - [ ] Apple Watch / Wear OS companion app
@@ -1438,13 +1322,30 @@ serverpod deploy
 ### Phase 3
 - [ ] Therapist dashboard (with user consent)
 - [ ] Group/family mood tracking
-- [ ] Guided breathing exercises when low mood detected
 - [ ] Smart home integration (adjust lights based on mood)
+- [ ] Social sharing (anonymous mood trends)
 
 ### Phase 4
 - [ ] Research mode for academic studies
 - [ ] Enterprise wellness programs
 - [ ] API for third-party integrations
+- [ ] Voice biometric authentication
+
+---
+
+## 📦 Flutter Dependencies
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.4.9       # State management
+  go_router: ^13.0.0             # Navigation
+  flutter_screenutil: ^5.9.0     # Responsive sizing
+  flutter_animate: ^4.3.0        # Animations
+  fl_chart: ^0.65.0              # Charts and graphs
+  # Future: serverpod_flutter, record, just_audio
+```
 
 ---
 
@@ -1461,13 +1362,13 @@ MIT License - See [LICENSE](LICENSE) for details.
 - **OpenAI Whisper** - Multilingual speech-to-text (English + Bengali)
 - **Groq** - Fast & free LLM API for AI insights
 - **TextBlob/NLTK** - Sentiment analysis
+- **fl_chart** - Beautiful Flutter charts
 
 ---
 
 ## 📞 Contact
 
 - **Developer**: Shawki
-- **Email**: your.email@example.com
 - **GitHub**: [yourusername](https://github.com/yourusername)
 
 ---
