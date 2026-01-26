@@ -22,6 +22,7 @@ class MusicPlayerScreen extends StatefulWidget {
 
 class _MusicPlayerScreenState extends State<MusicPlayerScreen>
     with TickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isPlaying = true;
   int _currentTrackIndex = 0;
   double _volume = 0.7;
@@ -151,6 +152,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
     final progress = _elapsedSeconds / trackDuration;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDark ? const Color(0xFF0f0f1a) : widget.color.withOpacity(0.05),
       body: SafeArea(
         child: Column(
@@ -196,7 +198,17 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
                       ),
                     ),
                   ),
-                  SizedBox(width: 48.w),
+                  GestureDetector(
+                    onTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+                    child: Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Icon(Icons.queue_music, size: 24.sp, color: isDark ? Colors.white : AppColors.textPrimary),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -494,101 +506,122 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
               ),
             ),
             
-            SizedBox(height: 16.h),
-            
-            // Playlist
-            Expanded(
-              flex: 1,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 16.w),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-                ),
-                child: Column(
+            SizedBox(height: 48.h),
+          ],
+        ),
+      ),
+      endDrawer: Drawer(
+        width: MediaQuery.of(context).size.width * 0.75,
+        backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(20.w),
+                child: Row(
                   children: [
-                    Padding(
-                      padding: EdgeInsets.all(16.w),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Up Next',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            '${_tracks.length} tracks',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: isDark ? Colors.white60 : AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                    Container(
+                      padding: EdgeInsets.all(10.w),
+                      decoration: BoxDecoration(
+                        color: widget.color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
+                      child: Icon(Icons.queue_music, color: widget.color, size: 24.sp),
                     ),
-                    Expanded(
-                      child: ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        itemCount: _tracks.length,
-                        itemBuilder: (context, index) {
-                          final track = _tracks[index];
-                          final isCurrentTrack = index == _currentTrackIndex;
-                          return ListTile(
-                            onTap: () => _selectTrack(index),
-                            leading: Container(
-                              width: 40.w,
-                              height: 40.w,
-                              decoration: BoxDecoration(
-                                color: isCurrentTrack ? widget.color : widget.color.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                              child: Icon(
-                                track['icon'] as IconData,
-                                color: isCurrentTrack ? Colors.white : widget.color,
-                                size: 20.sp,
-                              ),
-                            ),
-                            title: Text(
-                              track['title'] as String,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.normal,
-                                color: isCurrentTrack 
-                                    ? widget.color 
-                                    : (isDark ? Colors.white : AppColors.textPrimary),
-                              ),
-                            ),
-                            subtitle: Text(
-                              track['artist'] as String,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: isDark ? Colors.white38 : AppColors.textSecondary,
-                              ),
-                            ),
-                            trailing: isCurrentTrack && _isPlaying
-                                ? Icon(Icons.equalizer, color: widget.color, size: 20.sp)
-                                    .animate(onPlay: (c) => c.repeat())
-                                    .shimmer(duration: 1000.ms, color: widget.color)
-                                : Text(
-                                    _formatTime(track['duration'] as int),
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: isDark ? Colors.white38 : AppColors.textSecondary,
-                                    ),
-                                  ),
-                          );
-                        },
+                    SizedBox(width: 12.w),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Up Next',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${_tracks.length} tracks',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.close,
+                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        size: 24.sp,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              Divider(color: isDark ? Colors.white12 : Colors.black12),
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                  itemCount: _tracks.length,
+                  itemBuilder: (context, index) {
+                    final track = _tracks[index];
+                    final isCurrentTrack = index == _currentTrackIndex;
+                    return ListTile(
+                      onTap: () {
+                        _selectTrack(index);
+                        Navigator.pop(context);
+                      },
+                      leading: Container(
+                        width: 48.w,
+                        height: 48.w,
+                        decoration: BoxDecoration(
+                          color: isCurrentTrack ? widget.color : widget.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Icon(
+                          track['icon'] as IconData,
+                          color: isCurrentTrack ? Colors.white : widget.color,
+                          size: 22.sp,
+                        ),
+                      ),
+                      title: Text(
+                        track['title'] as String,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.normal,
+                          color: isCurrentTrack 
+                              ? widget.color 
+                              : (isDark ? Colors.white : AppColors.textPrimary),
+                        ),
+                      ),
+                      subtitle: Text(
+                        track['artist'] as String,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: isDark ? Colors.white38 : AppColors.textSecondary,
+                        ),
+                      ),
+                      trailing: isCurrentTrack && _isPlaying
+                          ? Icon(Icons.equalizer, color: widget.color, size: 22.sp)
+                              .animate(onPlay: (c) => c.repeat())
+                              .shimmer(duration: 1000.ms, color: widget.color)
+                          : Text(
+                              _formatTime(track['duration'] as int),
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: isDark ? Colors.white38 : AppColors.textSecondary,
+                              ),
+                            ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

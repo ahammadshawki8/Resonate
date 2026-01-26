@@ -51,14 +51,17 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/home',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            key: const ValueKey('home'),
-            child: const HomeScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-          ),
+          pageBuilder: (context, state) {
+            final action = state.uri.queryParameters['action'];
+            return CustomTransitionPage(
+              key: const ValueKey('home'),
+              child: HomeScreen(initialAction: action),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+            );
+          },
         ),
         GoRoute(
           path: '/calendar',

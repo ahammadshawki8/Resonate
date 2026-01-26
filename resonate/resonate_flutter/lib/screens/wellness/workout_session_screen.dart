@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 
 class WorkoutSessionScreen extends StatefulWidget {
@@ -186,10 +187,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.color,
                     padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -420,7 +418,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               ),
             ),
             
-            SizedBox(height: 32.h),
+            SizedBox(height: 64.h),
           ],
         ),
       ),
@@ -507,7 +505,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
         title: Text(
@@ -520,13 +518,13 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text('Continue', style: TextStyle(color: widget.color)),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
+              Navigator.of(context).pop();
             },
             child: const Text('End', style: TextStyle(color: Colors.red)),
           ),

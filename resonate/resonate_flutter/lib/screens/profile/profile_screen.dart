@@ -170,14 +170,6 @@ class ProfileScreen extends ConsumerWidget {
                       onTap: () =>
                           _showTimePicker(context, ref, settings.reminderTime),
                     ),
-                    _buildSettingsItem(
-                      icon: Icons.language,
-                      title: 'Voice Language',
-                      subtitle: settings.voiceLanguage == 'en'
-                          ? 'English'
-                          : 'Bengali',
-                      onTap: () => _showLanguageSelector(context, ref),
-                    ),
                     _buildSettingsSwitch(
                       icon: Icons.dark_mode_outlined,
                       title: 'Dark Mode',
@@ -512,76 +504,6 @@ class ProfileScreen extends ConsumerWidget {
     }
   }
 
-  void _showLanguageSelector(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.dividerDark : AppColors.divider,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Text(
-              'Select Voice Language',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-                color:
-                    isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-              ),
-            ),
-            SizedBox(height: 24.h),
-            ListTile(
-              leading: const Text('🇺🇸', style: TextStyle(fontSize: 24)),
-              title: Text('English',
-                  style: TextStyle(
-                      color: isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimary)),
-              trailing: ref.read(settingsProvider).voiceLanguage == 'en'
-                  ? Icon(Icons.check_circle, color: AppColors.primary)
-                  : null,
-              onTap: () {
-                ref.read(settingsProvider.notifier).setVoiceLanguage('en');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Text('🇧🇩', style: TextStyle(fontSize: 24)),
-              title: Text('বাংলা (Bengali)',
-                  style: TextStyle(
-                      color: isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimary)),
-              trailing: ref.read(settingsProvider).voiceLanguage == 'bn'
-                  ? Icon(Icons.check_circle, color: AppColors.primary)
-                  : null,
-              onTap: () {
-                ref.read(settingsProvider.notifier).setVoiceLanguage('bn');
-                Navigator.pop(context);
-              },
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 16.h),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
@@ -670,7 +592,19 @@ class ProfileScreen extends ConsumerWidget {
         ),
         title: Row(
           children: [
-            Text('🎤', style: TextStyle(fontSize: 28.sp)),
+            Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/brand_logo_dark.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
             SizedBox(width: 12.w),
             const Text('Resonate'),
           ],

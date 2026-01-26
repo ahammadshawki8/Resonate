@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 
 class MeditationSessionScreen extends StatefulWidget {
@@ -230,10 +231,7 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.color,
                     padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -409,7 +407,7 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
             
             // Controls
             Padding(
-              padding: EdgeInsets.all(32.w),
+              padding: EdgeInsets.only(top: 32.h, bottom: 64.h),
               child: GestureDetector(
                 onTap: _togglePause,
                 child: Container(
@@ -451,7 +449,7 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => Navigator.of(context).pop(),
                     child: Container(
                       padding: EdgeInsets.all(12.w),
                       decoration: BoxDecoration(
@@ -575,7 +573,7 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
         title: Text(
@@ -588,13 +586,13 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text('Continue', style: TextStyle(color: widget.color)),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
+              Navigator.of(context).pop();
             },
             child: const Text('End', style: TextStyle(color: Colors.red)),
           ),

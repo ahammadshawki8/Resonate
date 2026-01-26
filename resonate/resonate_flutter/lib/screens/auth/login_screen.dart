@@ -77,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               SizedBox(height: 40.h),
               
-              // Welcome back
+              // Logo and Welcome back
               Center(
                 child: Column(
                   children: [
@@ -85,13 +85,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: 80.w,
                       height: 80.w,
                       decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                      child: Center(
-                        child: Text(
-                          '🎤',
-                          style: TextStyle(fontSize: 40.sp),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/brand_logo_dark.jpg',
+                          fit: BoxFit.cover,
                         ),
                       ),
                     )

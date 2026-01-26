@@ -409,6 +409,77 @@ final gratitudeProvider = StateNotifierProvider<GratitudeNotifier, List<Gratitud
   return GratitudeNotifier();
 });
 
+/// Wellness Goals Provider
+class WellnessGoalNotifier extends StateNotifier<List<WellnessGoal>> {
+  WellnessGoalNotifier() : super([]);
+
+  void addGoal(WellnessGoal goal) {
+    // Check if goal already exists (by title)
+    final exists = state.any((g) => g.title == goal.title && !g.isCompleted);
+    if (!exists) {
+      state = [goal, ...state];
+    }
+  }
+
+  void toggleGoal(String id) {
+    state = state.map((g) {
+      if (g.id == id) {
+        return g.copyWith(
+          isCompleted: !g.isCompleted,
+          completedAt: !g.isCompleted ? DateTime.now() : null,
+        );
+      }
+      return g;
+    }).toList();
+  }
+
+  void deleteGoal(String id) {
+    state = state.where((g) => g.id != id).toList();
+  }
+}
+
+final wellnessGoalProvider = StateNotifierProvider<WellnessGoalNotifier, List<WellnessGoal>>((ref) {
+  return WellnessGoalNotifier();
+});
+
+/// Favorite Contacts Provider
+class FavoriteContactNotifier extends StateNotifier<List<FavoriteContact>> {
+  FavoriteContactNotifier() : super(_createDefaultContacts());
+
+  static List<FavoriteContact> _createDefaultContacts() {
+    final now = DateTime.now();
+    return [
+      FavoriteContact(id: 'default_1', createdAt: now, name: 'Mom', emoji: '👩', type: 'Family'),
+      FavoriteContact(id: 'default_2', createdAt: now, name: 'Dad', emoji: '👨', type: 'Family'),
+      FavoriteContact(id: 'default_3', createdAt: now, name: 'Best Friend', emoji: '🧑‍🤝‍🧑', type: 'Friend'),
+      FavoriteContact(id: 'default_4', createdAt: now, name: 'Sibling', emoji: '👫', type: 'Family'),
+      FavoriteContact(id: 'default_5', createdAt: now, name: 'Therapist', emoji: '🧠', type: 'Professional'),
+    ];
+  }
+
+  static const int maxContacts = 6;
+
+  bool get canAddMore => state.length < maxContacts;
+
+  void addContact(FavoriteContact contact) {
+    // Check if max contacts reached
+    if (state.length >= maxContacts) return;
+    // Check if contact already exists (by name)
+    final exists = state.any((c) => c.name.toLowerCase() == contact.name.toLowerCase());
+    if (!exists) {
+      state = [contact, ...state];
+    }
+  }
+
+  void deleteContact(String id) {
+    state = state.where((c) => c.id != id).toList();
+  }
+}
+
+final favoriteContactProvider = StateNotifierProvider<FavoriteContactNotifier, List<FavoriteContact>>((ref) {
+  return FavoriteContactNotifier();
+});
+
 /// Onboarding completion state
 final hasSeenOnboardingProvider = StateProvider<bool>((ref) => false);
 

@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
-import '../../widgets/shared_widgets.dart';
 import '../../providers/app_providers.dart';
 import '../../data/models/models.dart';
+import 'entry_detail_screen.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -34,10 +35,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final entries = ref.watch(entriesProvider);
-    final selectedEntry = _selectedDay != null 
-        ? _getEntryForDay(_selectedDay!, entries) 
-        : null;
-    
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
@@ -85,10 +82,24 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 setState(() => _calendarFormat = format);
               },
               onDaySelected: (selectedDay, focusedDay) {
+                final entry = _getEntryForDay(selectedDay, entries);
                 setState(() {
                   _selectedDay = selectedDay;
                   _focusedDay = focusedDay;
                 });
+                
+                if (entry != null) {
+                  // Navigate to entry detail screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EntryDetailScreen(entry: entry),
+                    ),
+                  );
+                } else {
+                  // Show alert for no entry
+                  _showNoEntryAlert(context, selectedDay, isDark);
+                }
               },
               onPageChanged: (focusedDay) {
                 _focusedDay = focusedDay;
@@ -173,22 +184,83 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ).animate().fadeIn(delay: 200.ms),
           
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
           
-          // Selected day entry or empty state
-          Expanded(
-            child: _selectedDay != null
-                ? selectedEntry != null
-                    ? _buildSelectedEntry(selectedEntry)
-                        .animate()
-                        .fadeIn()
-                        .slideY(begin: 0.1, end: 0)
-                    : _buildNoEntry()
-                        .animate()
-                        .fadeIn()
-                : _buildSelectDayPrompt()
-                    .animate()
-                    .fadeIn(delay: 300.ms),
+          // Info Card
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 16.w),
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.touch_app, color: AppColors.primary, size: 24.sp),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    'Tap on any date to view the detailed entry for that day',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 300.ms),
+          
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  void _showNoEntryAlert(BuildContext context, DateTime date, bool isDark) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final formattedDate = '${months[date.month - 1]} ${date.day}, ${date.year}';
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('📝', style: TextStyle(fontSize: 48.sp)),
+            SizedBox(height: 16.h),
+            Text(
+              'No Entry Found',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'There\'s no voice entry for $formattedDate',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'OK',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -215,120 +287,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSelectedEntry(VoiceEntry entry) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        children: [
-          MoodCard(
-            moodScore: entry.finalMoodScore,
-            recordedAt: entry.recordedAt,
-            transcript: entry.transcript,
-            tags: entry.tags,
-          ),
-          SizedBox(height: 16.h),
-          // Quick stats
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Entry Details',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                _buildDetailRow('Duration', '${entry.durationSeconds.round()} seconds'),
-                _buildDetailRow('Language', entry.language == 'en' ? 'English' : 'Bengali'),
-                _buildDetailRow('Confidence', '${(entry.confidence * 100).round()}%'),
-                if (entry.detectedEmotions.isNotEmpty)
-                  _buildDetailRow('Emotions', entry.detectedEmotions.join(', ')),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6.h),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoEntry() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '📝',
-            style: TextStyle(fontSize: 48.sp),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'No entry for this day',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSelectDayPrompt() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '📅',
-            style: TextStyle(fontSize: 48.sp),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'Select a day to view entry',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

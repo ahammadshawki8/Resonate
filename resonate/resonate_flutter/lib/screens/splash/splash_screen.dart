@@ -55,12 +55,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(height: 40.h),
-                  // Logo/Icon
+                  // Logo
                   Container(
-                    width: 120.w,
-                    height: 120.w,
+                    width: 140.w,
+                    height: 140.w,
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -70,10 +69,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         ),
                       ],
                     ),
-                    child: Center(
-                      child: Text(
-                        '🎤',
-                        style: TextStyle(fontSize: 56.sp),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/brand_logo_light.jpg',
+                        fit: BoxFit.cover,
                       ),
                     ),
                   )

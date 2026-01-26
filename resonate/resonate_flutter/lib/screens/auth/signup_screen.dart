@@ -112,6 +112,37 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               
               SizedBox(height: 24.h),
               
+              // Logo
+              Center(
+                child: Container(
+                  width: 60.w,
+                  height: 60.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/brand_logo_dark.jpg',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ).animate().scale(
+                  begin: const Offset(0.7, 0.7),
+                  end: const Offset(1, 1),
+                  duration: 400.ms,
+                  curve: Curves.easeOut,
+                ),
+              ),
+              
+              SizedBox(height: 24.h),
+              
               // Header
               Text(
                 'Create Account',

@@ -12,11 +12,61 @@ import '../wellness/workout_session_screen.dart';
 import '../wellness/meditation_session_screen.dart';
 import '../wellness/music_player_screen.dart';
 
-class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  final String? initialAction;
+  
+  const HomeScreen({super.key, this.initialAction});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _actionTriggered = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Trigger initial action after frame is built
+    if (widget.initialAction != null && !_actionTriggered) {
+      _actionTriggered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _triggerAction(widget.initialAction!);
+      });
+    }
+  }
+
+  void _triggerAction(String actionType) {
+    switch (actionType) {
+      case 'breathing':
+        _showBreathingExercise(context);
+        break;
+      case 'journal':
+        _showJournalPrompt(context, ref);
+        break;
+      case 'gratitude':
+        _showGratitudePrompt(context, ref);
+        break;
+      case 'music':
+        _showMusicSuggestion(context);
+        break;
+      case 'call':
+        _showCallSuggestion(context, ref);
+        break;
+      case 'meditate':
+        _showMeditationGuide(context);
+        break;
+      case 'workout':
+        _showWorkoutSuggestion(context);
+        break;
+      case 'goals':
+        _showGoalsSetting(context, ref);
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final entries = ref.watch(entriesProvider);
     final insights = ref.watch(insightsProvider);
@@ -412,6 +462,8 @@ class HomeScreen extends ConsumerWidget {
                 SnackBar(
                   content: const Text('Entry deleted'),
                   behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 5),
+                  margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.r)),
                 ),
@@ -471,6 +523,28 @@ class HomeScreen extends ConsumerWidget {
 
     return Row(
       children: [
+        // Brand Logo
+        Container(
+          width: 44.w,
+          height: 44.w,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/brand_logo_dark.jpg',
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,7 +562,7 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 name,
                 style: TextStyle(
-                  fontSize: 26.sp,
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   color: isDark
                       ? AppColors.textPrimaryDark
@@ -968,7 +1042,7 @@ class HomeScreen extends ConsumerWidget {
         _showMusicSuggestion(context);
         break;
       case 'call':
-        _showCallSuggestion(context);
+        _showCallSuggestion(context, ref);
         break;
       case 'meditate':
         _showMeditationGuide(context);
@@ -976,17 +1050,8 @@ class HomeScreen extends ConsumerWidget {
       case 'workout':
         _showWorkoutSuggestion(context);
         break;
-      case 'share':
-        _showShareExperience(context);
-        break;
-      case 'celebrate':
-        _showCelebration(context);
-        break;
       case 'goals':
-        _showGoalsSetting(context);
-        break;
-      case 'focus':
-        _showFocusMode(context);
+        _showGoalsSetting(context, ref);
         break;
     }
   }
@@ -1038,7 +1103,7 @@ class HomeScreen extends ConsumerWidget {
             _BreathingAnimation(),
             const Spacer(),
             Padding(
-              padding: EdgeInsets.all(24.w),
+              padding: EdgeInsets.only(left: 24.w, right: 24.w, bottom: 60.h),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -1186,12 +1251,8 @@ class HomeScreen extends ConsumerWidget {
                           content: const Text('📓 Journal entry saved!'),
                           backgroundColor: AppColors.success,
                           behavior: SnackBarBehavior.floating,
-                          margin: EdgeInsets.only(bottom: 80.h, left: 16.w, right: 16.w),
-                          action: SnackBarAction(
-                            label: 'View All',
-                            textColor: Colors.white,
-                            onPressed: () => rootContext.push('/wellness-history'),
-                          ),
+                          duration: const Duration(seconds: 5),
+                          margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w),
                         ),
                       );
                     } else {
@@ -1209,6 +1270,7 @@ class HomeScreen extends ConsumerWidget {
                           color: Colors.white, fontWeight: FontWeight.w600)),
                 ),
               ),
+              SizedBox(height: 40.h),
             ],
           ),
         ),
@@ -1322,13 +1384,9 @@ class HomeScreen extends ConsumerWidget {
                           content: const Text(
                               '🙏 Gratitude saved! Keep up the positive mindset!'),
                           backgroundColor: AppColors.success,
+                          duration: const Duration(seconds: 5),
                           behavior: SnackBarBehavior.floating,
-                          margin: EdgeInsets.only(bottom: 80.h, left: 16.w, right: 16.w),
-                          action: SnackBarAction(
-                            label: 'View All',
-                            textColor: Colors.white,
-                            onPressed: () => rootContext.push('/wellness-history'),
-                          ),
+                          margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w),
                         ),
                       );
                     } else {
@@ -1346,6 +1404,7 @@ class HomeScreen extends ConsumerWidget {
                           color: Colors.white, fontWeight: FontWeight.w600)),
                 ),
               ),
+              SizedBox(height: 40.h),
             ],
           ),
         ),
@@ -1385,19 +1444,24 @@ class HomeScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (modalContext) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
                 color: Colors.grey.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2.r),
               ),
@@ -1450,16 +1514,18 @@ class HomeScreen extends ConsumerWidget {
                         color: option['color'] as Color, size: 32.sp),
                     onTap: () {
                       Navigator.pop(modalContext);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MusicPlayerScreen(
-                            category: option['title'] as String,
-                            emoji: option['emoji'] as String,
-                            color: option['color'] as Color,
+                      Future.microtask(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MusicPlayerScreen(
+                              category: option['title'] as String,
+                              emoji: option['emoji'] as String,
+                              color: option['color'] as Color,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      });
                     },
                     tileColor: isDark ? AppColors.cardDark : AppColors.surface,
                     shape: RoundedRectangleBorder(
@@ -1469,186 +1535,174 @@ class HomeScreen extends ConsumerWidget {
             SizedBox(height: 8.h),
           ],
         ),
+        ),
       ),
     );
   }
 
-  void _showCallSuggestion(BuildContext context) {
+  void _showCallSuggestion(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final contacts = [
-      {'name': 'Mom', 'emoji': '👩', 'type': 'Family', 'color': Colors.pink},
-      {'name': 'Dad', 'emoji': '👨', 'type': 'Family', 'color': Colors.blue},
-      {'name': 'Best Friend', 'emoji': '🧑‍🤝‍🧑', 'type': 'Friend', 'color': Colors.purple},
-      {'name': 'Sibling', 'emoji': '👫', 'type': 'Family', 'color': Colors.orange},
-      {'name': 'Therapist', 'emoji': '🧠', 'type': 'Professional', 'color': Colors.teal},
-    ];
+    final allContacts = ref.read(favoriteContactProvider);
+    // Limit to 6 contacts max
+    final contacts = allContacts.take(6).toList();
+    final rootContext = context;
     
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (modalContext) => Container(
-        height: MediaQuery.of(context).size.height * 0.6,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.55,
+        ),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          children: [
-            Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(2.r))),
-            SizedBox(height: 20.h),
-            Text('📞 Call Someone',
-                style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary)),
-            SizedBox(height: 8.h),
-            Text('Connecting with loved ones can help you feel better',
-                style: TextStyle(
-                    fontSize: 14.sp,
-                    color: isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondary),
-                textAlign: TextAlign.center),
-            SizedBox(height: 24.h),
-            
-            // Quick dial suggestion
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.green.withOpacity(0.1), Colors.teal.withOpacity(0.1)],
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: SingleChildScrollView(
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2.r))),
+              SizedBox(height: 12.h),
+              Text('📞 Call Someone',
+                  style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimary)),
+              SizedBox(height: 4.h),
+              Text('Connecting with loved ones can help',
+                  style: TextStyle(
+                      fontSize: 12.sp,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondary),
+                  textAlign: TextAlign.center),
+              SizedBox(height: 12.h),
+              
+              // Section header with manage link
+              Row(
+              children: [
+                Text('Your Contacts',
+                    style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary)),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(modalContext);
+                    rootContext.push('/wellness-history');
+                  },
+                  child: Text('Manage',
+                      style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary)),
                 ),
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ],
+            ),
+            SizedBox(height: 10.h),
+            
+            // Contacts grid - compact, 2 rows of 3 (max 6)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 10.h,
+                crossAxisSpacing: 10.w,
+                childAspectRatio: 1.0,
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 50.w,
-                    height: 50.w,
+              itemCount: contacts.length,
+              itemBuilder: (context, index) {
+                final contact = contacts[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.pop(modalContext);
+                    ScaffoldMessenger.of(rootContext).showSnackBar(SnackBar(
+                        content: Text('📞 Calling ${contact.name}${contact.phone != null ? ' (${contact.phone})' : ''}...'),
+                        backgroundColor: Colors.green,
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 5),
+                        margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w)));
+                  },
+                  child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
+                      color: isDark ? AppColors.cardDark : AppColors.surface,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
                     ),
-                    child: Icon(Icons.favorite, color: Colors.white, size: 24.sp),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Who makes you feel safe?',
-                            style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
-                        Text('Think of someone who always listens',
-                            style: TextStyle(
-                                fontSize: 12.sp,
-                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary)),
+                        Container(
+                          width: 36.w,
+                          height: 36.w,
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(contact.emoji, style: TextStyle(fontSize: 18.sp)),
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
+                          child: Text(contact.name,
+                              style: TextStyle(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        Icon(Icons.call, color: Colors.green, size: 14.sp),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            
-            SizedBox(height: 20.h),
-            
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Suggested contacts',
-                  style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary)),
-            ),
-            SizedBox(height: 12.h),
-            
-            Expanded(
-              child: ListView.builder(
-                itemCount: contacts.length,
-                itemBuilder: (context, index) {
-                  final contact = contacts[index];
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 10.h),
-                    child: ListTile(
-                      leading: Container(
-                        width: 48.w,
-                        height: 48.w,
-                        decoration: BoxDecoration(
-                          color: (contact['color'] as Color).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Center(
-                          child: Text(contact['emoji'] as String, style: TextStyle(fontSize: 24.sp)),
-                        ),
-                      ),
-                      title: Text(contact['name'] as String,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
-                      subtitle: Text(contact['type'] as String,
-                          style: TextStyle(
-                              fontSize: 12.sp,
-                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary)),
-                      trailing: Container(
-                        width: 44.w,
-                        height: 44.w,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Icon(Icons.call, color: Colors.white, size: 22.sp),
-                      ),
-                      onTap: () {
-                        Navigator.pop(modalContext);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text('📞 Opening phone to call ${contact['name']}...'),
-                            backgroundColor: Colors.green,
-                            behavior: SnackBarBehavior.floating,
-                            margin: EdgeInsets.only(bottom: 80.h, left: 16.w, right: 16.w)));
-                      },
-                      tileColor: isDark ? AppColors.cardDark : AppColors.surface,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                    ),
-                  );
-                },
-              ),
+                );
+              },
             ),
             
             SizedBox(height: 12.h),
             
             // Crisis line info
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
                 color: Colors.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.emergency, color: Colors.red, size: 20.sp),
+                  Icon(Icons.emergency, color: Colors.red, size: 16.sp),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
                       'In crisis? Call 988 (Suicide & Crisis Lifeline)',
-                      style: TextStyle(fontSize: 12.sp, color: Colors.red, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 11.sp, color: Colors.red, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
               ),
             ),
+            SizedBox(height: 80.h),
           ],
+        ),
+        ),
         ),
       ),
     );
@@ -1686,23 +1740,28 @@ class HomeScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (modalContext) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(2.r))),
-            SizedBox(height: 20.h),
-            Text('🧘 Guided Meditation',
+        padding: EdgeInsets.all(20.w),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2.r))),
+              SizedBox(height: 20.h),
+              Text('🧘 Guided Meditation',
                 style: TextStyle(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.bold,
@@ -1728,12 +1787,15 @@ class HomeScreen extends ConsumerWidget {
                           color: m['color'] as Color),
                     ),
                     title: Row(children: [
-                      Text(m['title'] as String,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.textPrimaryDark
-                                  : AppColors.textPrimary)),
+                      Flexible(
+                        child: Text(m['title'] as String,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? AppColors.textPrimaryDark
+                                    : AppColors.textPrimary)),
+                      ),
                       SizedBox(width: 8.w),
                       Container(
                         padding: EdgeInsets.symmetric(
@@ -1752,24 +1814,27 @@ class HomeScreen extends ConsumerWidget {
                         Icon(Icons.play_arrow, color: m['color'] as Color),
                     onTap: () {
                       Navigator.pop(modalContext);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MeditationSessionScreen(
-                            meditationType: m['title'] as String,
-                            durationMinutes: m['duration'] as int,
-                            icon: m['icon'] as IconData,
-                            color: m['color'] as Color,
+                      Future.microtask(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MeditationSessionScreen(
+                              meditationType: m['title'] as String,
+                              durationMinutes: m['duration'] as int,
+                              icon: m['icon'] as IconData,
+                              color: m['color'] as Color,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      });
                     },
                     tileColor: isDark ? AppColors.cardDark : AppColors.surface,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.r)),
                   ),
                 )),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1849,7 +1914,14 @@ class HomeScreen extends ConsumerWidget {
         'color': Colors.blue
       },
       {
-        'emoji': '💃',
+        'emoji': '�',
+        'title': 'Walking',
+        'duration': 10,
+        'intensity': 'Low',
+        'color': Colors.green
+      },
+      {
+        'emoji': '�💃',
         'title': 'Dance Break',
         'duration': 5,
         'intensity': 'Medium',
@@ -1867,23 +1939,28 @@ class HomeScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (modalContext) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(2.r))),
-            SizedBox(height: 20.h),
-            Text('💪 Movement Therapy',
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2.r))),
+              SizedBox(height: 20.h),
+              Text('💪 Movement Therapy',
                 style: TextStyle(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.bold,
@@ -1942,305 +2019,209 @@ class HomeScreen extends ConsumerWidget {
                         color: w['color'] as Color, size: 18.sp),
                     onTap: () {
                       Navigator.pop(modalContext);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => WorkoutSessionScreen(
-                            workoutType: w['title'] as String,
-                            emoji: w['emoji'] as String,
-                            color: w['color'] as Color,
-                            durationMinutes: w['duration'] as int,
+                      Future.microtask(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WorkoutSessionScreen(
+                              workoutType: w['title'] as String,
+                              emoji: w['emoji'] as String,
+                              color: w['color'] as Color,
+                              durationMinutes: w['duration'] as int,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      });
                     },
                     tileColor: isDark ? AppColors.cardDark : AppColors.surface,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.r)),
                   ),
                 )),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showShareExperience(BuildContext context) {
+  void _showGoalsSetting(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final rootContext = context;
+    final customGoalController = TextEditingController();
+    final goals = [
+      {'emoji': '💧', 'title': 'Drink more water'},
+      {'emoji': '😴', 'title': 'Sleep 8 hours'},
+      {'emoji': '🚶', 'title': 'Walk 10 min daily'},
+      {'emoji': '📵', 'title': 'Less screen time'},
+      {'emoji': '🧘', 'title': 'Meditate daily'},
+      {'emoji': '📓', 'title': 'Journal nightly'},
+    ];
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('💬 Share Your Experience',
-                style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary)),
-            SizedBox(height: 20.h),
-            ...[
-              (Icons.message, 'Text a Friend', Colors.blue),
-              (Icons.group, 'Support Community', Colors.green),
-              (Icons.note_alt, 'Private Note', Colors.purple)
-            ].map(
-              (item) => Container(
-                margin: EdgeInsets.only(bottom: 12.h),
-                child: ListTile(
-                  leading: Container(
-                      width: 44.w,
-                      height: 44.w,
-                      decoration: BoxDecoration(
-                          color: item.$3.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12.r)),
-                      child: Icon(item.$1, color: item.$3)),
-                  title: Text(item.$2,
+      isScrollControlled: true,
+      builder: (modalContext) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(modalContext).viewInsets.bottom),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          ),
+          padding: EdgeInsets.all(24.w),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('🎯 Set a Wellness Goal',
+                    style: TextStyle(
+                        fontSize: 22.sp,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimary)),
+                SizedBox(height: 8.h),
+                Text('Choose a preset or create your own',
+                    style: TextStyle(
+                        fontSize: 14.sp,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondary)),
+                SizedBox(height: 20.h),
+                
+                // Custom goal input
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('✨ Custom Goal',
+                          style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary)),
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: customGoalController,
+                              decoration: InputDecoration(
+                                hintText: 'Enter your own goal...',
+                                hintStyle: TextStyle(
+                                    color: isDark
+                                        ? AppColors.textSecondaryDark
+                                        : AppColors.textSecondary),
+                                filled: true,
+                                fillColor: isDark ? AppColors.cardDark : Colors.white,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              style: TextStyle(
+                                  color: isDark
+                                      ? AppColors.textPrimaryDark
+                                      : AppColors.textPrimary),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (customGoalController.text.trim().isNotEmpty) {
+                                final goal = WellnessGoal(
+                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                  createdAt: DateTime.now(),
+                                  title: customGoalController.text.trim(),
+                                  emoji: '⭐',
+                                );
+                                ref.read(wellnessGoalProvider.notifier).addGoal(goal);
+                                Navigator.pop(modalContext);
+                                ScaffoldMessenger.of(rootContext).showSnackBar(SnackBar(
+                                    content: Text('🎯 Goal set: ⭐ ${customGoalController.text.trim()}'),
+                                    backgroundColor: AppColors.success,
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: const Duration(seconds: 5),
+                                    margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w)));
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r)),
+                            ),
+                            child: const Text('Add', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 20.h),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('📝 Preset Goals',
                       style: TextStyle(
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                           color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimary)),
-                  trailing: Icon(Icons.arrow_forward_ios,
-                      color: item.$3, size: 18.sp),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('💬 Opening ${item.$2}...'),
-                        backgroundColor: item.$3));
-                  },
-                  tileColor: isDark ? AppColors.cardDark : AppColors.surface,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r)),
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondary)),
                 ),
-              ),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: goals
+                      .map((g) => GestureDetector(
+                            onTap: () {
+                              final goal = WellnessGoal(
+                                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                createdAt: DateTime.now(),
+                                title: g['title']!,
+                                emoji: g['emoji']!,
+                              );
+                              ref.read(wellnessGoalProvider.notifier).addGoal(goal);
+                              Navigator.pop(modalContext);
+                              ScaffoldMessenger.of(rootContext).showSnackBar(SnackBar(
+                                  content: Text('🎯 Goal set: ${g['emoji']} ${g['title']}'),
+                                  backgroundColor: AppColors.success,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 5),
+                                  margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w)));
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w, vertical: 10.h),
+                              decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                  border: Border.all(
+                                      color: AppColors.primary.withOpacity(0.3))),
+                              child: Text('${g['emoji']} ${g['title']}',
+                                  style: TextStyle(
+                                      fontSize: 13.sp,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w500)),
+                            ),
+                          ))
+                      .toList(),
+                ),
+                SizedBox(height: 16.h),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCelebration(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final affirmations = [
-      'You are worthy of love and joy.',
-      'Your feelings are valid.',
-      'You have strength to overcome.',
-      'Every step forward is progress.'
-    ];
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('🎉', style: TextStyle(fontSize: 64.sp))
-                .animate(onPlay: (c) => c.repeat())
-                .shimmer(duration: 1200.ms, color: Colors.amber),
-            SizedBox(height: 16.h),
-            Text('Celebrate Yourself!',
-                style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary)),
-            SizedBox(height: 16.h),
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r)),
-              child: Text(
-                  affirmations[DateTime.now().second % affirmations.length],
-                  style: TextStyle(
-                      fontSize: 15.sp,
-                      color: isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimary,
-                      fontStyle: FontStyle.italic),
-                  textAlign: TextAlign.center),
-            ),
-            SizedBox(height: 24.h),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r))),
-              child: const Text('🎊 Celebrate!',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showGoalsSetting(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final goals = [
-      '💧 Drink more water',
-      '😴 Sleep 8 hours',
-      '🚶 Walk 10 min daily',
-      '📵 Less screen time',
-      '🧘 Meditate daily',
-      '📓 Journal nightly'
-    ];
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('🎯 Set a Wellness Goal',
-                style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary)),
-            SizedBox(height: 8.h),
-            Text('Small steps lead to big changes',
-                style: TextStyle(
-                    fontSize: 14.sp,
-                    color: isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondary)),
-            SizedBox(height: 20.h),
-            Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: goals
-                  .map((g) => GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('🎯 Goal set: $g'),
-                              backgroundColor: AppColors.success));
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 10.h),
-                          decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3))),
-                          child: Text(g,
-                              style: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w500)),
-                        ),
-                      ))
-                  .toList(),
-            ),
-            SizedBox(height: 16.h),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showFocusMode(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final options = [
-      {
-        'emoji': '🍅',
-        'title': 'Pomodoro Timer',
-        'desc': '25 min focus, 5 min break',
-        'color': Colors.red
-      },
-      {
-        'emoji': '📵',
-        'title': 'Digital Detox',
-        'desc': 'Minimize distractions',
-        'color': Colors.purple
-      },
-      {
-        'emoji': '📝',
-        'title': 'Priority Task',
-        'desc': 'Focus on most important',
-        'color': Colors.blue
-      },
-    ];
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('🎯 Focus Mode',
-                style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary)),
-            SizedBox(height: 20.h),
-            ...options.map((o) => Container(
-                  margin: EdgeInsets.only(bottom: 12.h),
-                  child: ListTile(
-                    leading: Container(
-                        width: 44.w,
-                        height: 44.w,
-                        decoration: BoxDecoration(
-                            color: (o['color'] as Color).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12.r)),
-                        child: Center(
-                            child: Text(o['emoji'] as String,
-                                style: TextStyle(fontSize: 22.sp)))),
-                    title: Text(o['title'] as String,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? AppColors.textPrimaryDark
-                                : AppColors.textPrimary)),
-                    subtitle: Text(o['desc'] as String,
-                        style: TextStyle(
-                            fontSize: 12.sp,
-                            color: isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondary)),
-                    trailing: Icon(Icons.play_circle_fill,
-                        color: o['color'] as Color, size: 28.sp),
-                    onTap: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content:
-                              Text('${o['emoji']} Starting ${o['title']}...'),
-                          backgroundColor: o['color'] as Color));
-                    },
-                    tileColor: isDark ? AppColors.cardDark : AppColors.surface,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r)),
-                  ),
-                )),
-          ],
+          ),
         ),
       ),
     );

@@ -708,16 +708,16 @@ class PersonalizedResponse {
                 actionType: 'gratitude',
                 color: Color(0xFFDDA0DD)),
             const QuickAction(
-                id: 'share',
-                label: 'Share Feeling',
-                emoji: '💬',
-                actionType: 'share',
+                id: 'journal',
+                label: 'Journal',
+                emoji: '📓',
+                actionType: 'journal',
                 color: Color(0xFF7DD3C0)),
             const QuickAction(
-                id: 'celebrate',
-                label: 'Celebrate',
-                emoji: '🎉',
-                actionType: 'celebrate',
+                id: 'music',
+                label: 'Happy Music',
+                emoji: '🎵',
+                actionType: 'music',
                 color: Color(0xFFFFD93D)),
           ],
           accentColor: const Color(0xFFFFD93D),
@@ -784,10 +784,10 @@ class PersonalizedResponse {
                 actionType: 'workout',
                 color: Color(0xFFE74C3C)),
             const QuickAction(
-                id: 'focus',
-                label: 'Focus Mode',
-                emoji: '🎧',
-                actionType: 'focus',
+                id: 'music',
+                label: 'Energizing Music',
+                emoji: '🎵',
+                actionType: 'music',
                 color: Color(0xFFFECA57)),
           ],
           accentColor: const Color(0xFFFF9F43),
@@ -826,10 +826,10 @@ class PersonalizedResponse {
                 actionType: 'music',
                 color: Color(0xFF81ECEC)),
             const QuickAction(
-                id: 'walk',
+                id: 'workout',
                 label: 'Gentle Walk',
                 emoji: '🚶',
-                actionType: 'walk',
+                actionType: 'workout',
                 color: Color(0xFF98D8AA)),
           ],
           accentColor: const Color(0xFF74B9FF),
@@ -856,10 +856,10 @@ class PersonalizedResponse {
                 actionType: 'breathing',
                 color: Color(0xFFFDCB6E)),
             const QuickAction(
-                id: 'grounding',
-                label: 'Grounding',
-                emoji: '🌍',
-                actionType: 'grounding',
+                id: 'music',
+                label: 'Calm Sounds',
+                emoji: '🎶',
+                actionType: 'music',
                 color: Color(0xFF98D8AA)),
             const QuickAction(
                 id: 'meditate',
@@ -1009,6 +1009,80 @@ class GratitudeEntry {
       id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
       items: items ?? this.items,
+    );
+  }
+}
+
+// Wellness Goal Model
+class WellnessGoal {
+  final String id;
+  final DateTime createdAt;
+  final String title;
+  final String emoji;
+  final bool isCompleted;
+  final DateTime? completedAt;
+
+  const WellnessGoal({
+    required this.id,
+    required this.createdAt,
+    required this.title,
+    required this.emoji,
+    this.isCompleted = false,
+    this.completedAt,
+  });
+
+  WellnessGoal copyWith({
+    String? id,
+    DateTime? createdAt,
+    String? title,
+    String? emoji,
+    bool? isCompleted,
+    DateTime? completedAt,
+  }) {
+    return WellnessGoal(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      title: title ?? this.title,
+      emoji: emoji ?? this.emoji,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
+    );
+  }
+}
+
+// Favorite Contact Model
+class FavoriteContact {
+  final String id;
+  final DateTime createdAt;
+  final String name;
+  final String emoji;
+  final String type; // Family, Friend, Professional, etc.
+  final String? phone;
+
+  const FavoriteContact({
+    required this.id,
+    required this.createdAt,
+    required this.name,
+    required this.emoji,
+    required this.type,
+    this.phone,
+  });
+
+  FavoriteContact copyWith({
+    String? id,
+    DateTime? createdAt,
+    String? name,
+    String? emoji,
+    String? type,
+    String? phone,
+  }) {
+    return FavoriteContact(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      name: name ?? this.name,
+      emoji: emoji ?? this.emoji,
+      type: type ?? this.type,
+      phone: phone ?? this.phone,
     );
   }
 }
