@@ -7,7 +7,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/app_providers.dart';
-import '../../data/models/models.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
   const RecordScreen({super.key});
@@ -23,16 +22,10 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
   int _recordingSeconds = 0;
   Timer? _timer;
   final List<double> _waveformData = [];
-  final Random _random = Random();
+  // Removed unused _random
   String _selectedLanguage = 'English';
 
-  final List<String> _sampleTranscripts = [
-    "I've been feeling really productive today. Managed to complete most of my tasks and even had time for a nice walk outside. The weather was perfect.",
-    "Work has been a bit stressful lately, but I'm trying to stay positive. I talked to my friend today and it really helped me feel better.",
-    "Just spent some time with family and it was wonderful. We shared stories and laughed a lot. These moments mean so much to me.",
-    "I've been feeling a bit overwhelmed with everything going on. Need to take more breaks and practice self-care.",
-    "Today was a good day! I learned something new and felt really accomplished. Looking forward to tomorrow.",
-  ];
+  // Transcripts and analysis now come from backend
 
   @override
   void dispose() {
@@ -51,10 +44,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _recordingSeconds++;
-        // Add fake waveform data
-        for (int i = 0; i < 5; i++) {
-          _waveformData.add(_random.nextDouble() * 0.8 + 0.2);
-        }
+        // Add waveform data from real recording (TODO: implement)
       });
 
       // Auto-stop after 60 seconds
@@ -97,61 +87,11 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
   }
 
   Future<void> _performAnalysis() async {
-    // Simulate analysis steps with delays
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() {}); // Refresh to show first step complete
-
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-
-    // Generate mock analysis result
-    final moodScore = 0.4 + _random.nextDouble() * 0.5; // 0.4 - 0.9
-    final transcript =
-        _sampleTranscripts[_random.nextInt(_sampleTranscripts.length)];
-
-    // Generate detailed emotions based on mood score
-    final detailedEmotions =
-        EmotionLibrary.getEmotionsForMoodScore(moodScore, count: 4);
-    final emotions = detailedEmotions.map((e) => e.name.toLowerCase()).toList();
-
-    // Generate personalized response based on emotions
-    final personalizedResponse =
-        PersonalizedResponse.generate(detailedEmotions, moodScore);
-
-    final result = AnalysisResult(
-      moodScore: moodScore,
-      moodLabel: _getMoodLabel(moodScore),
-      transcript: transcript,
-      emotions: emotions,
-      detailedEmotions: detailedEmotions,
-      personalizedResponse: personalizedResponse,
-      confidence: 0.85 + _random.nextDouble() * 0.1,
-      acousticScore: moodScore - 0.05 + _random.nextDouble() * 0.1,
-      semanticScore: moodScore + 0.03 - _random.nextDouble() * 0.1,
-      language: 'en',
-      duration: _recordingSeconds.toDouble(),
-    );
-
-    // Store the result
-    ref.read(analysisResultProvider.notifier).state = result;
-
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (mounted) {
-      context.go('/result');
-    }
+    // TODO: Call backend for analysis result and transcript
+    // Store the result from backend
   }
 
-  String _getMoodLabel(double score) {
-    if (score >= 0.8) return 'Very Positive';
-    if (score >= 0.6) return 'Positive';
-    if (score >= 0.4) return 'Neutral';
-    if (score >= 0.2) return 'Low';
-    return 'Very Low';
-  }
+  // Removed unused _getMoodLabel
 
   void _showLanguageSelector() {
     final isDark = Theme.of(context).brightness == Brightness.dark;

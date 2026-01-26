@@ -1,0 +1,54 @@
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+jwtRefresh:
+  - refreshAccessToken:
+analytics:
+  - getWeeklyAnalytics:
+  - getMoodDistribution:
+  - getTimeOfDayAnalysis:
+  - getPatterns:
+insight:
+  - getInsights:
+  - getUnreadCount:
+  - markAsRead:
+  - generateInsight:
+settings:
+  - getSettings:
+  - updateSettings:
+  - toggleDarkMode:
+  - toggleNotifications:
+tag:
+  - getTags:
+  - createTag:
+  - deleteTag:
+  - addTagToEntry:
+userProfile:
+  - getProfile:
+  - updateProfile:
+  - getStats:
+  - deleteAccount:
+voiceEntry:
+  - uploadAndAnalyze:
+  - getEntries:
+  - getEntry:
+  - getTodayEntry:
+  - getCalendarMonth:
+  - deleteEntry:
+wellness:
+  - getJournals:
+  - createJournal:
+  - getGratitudes:
+  - createGratitude:
+  - getGoals:
+  - createGoal:
+  - toggleGoal:
+  - getContacts:
+  - createContact:
+greeting:
+  - hello:

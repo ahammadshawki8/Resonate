@@ -1,0 +1,7 @@
+### Daily mood data for charts (DTO).
+class: DailyMoodData
+
+fields:
+  day: String
+  score: double
+  hasEntry: bool

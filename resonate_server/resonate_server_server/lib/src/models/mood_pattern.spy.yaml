@@ -1,0 +1,14 @@
+### Detected mood pattern over time.
+class: MoodPattern
+table: mood_patterns
+
+fields:
+  userProfileId: int
+  patternType: String
+  description: String
+  confidence: double
+  detectedAt: DateTime
+
+indexes:
+  pattern_user_idx:
+    fields: userProfileId

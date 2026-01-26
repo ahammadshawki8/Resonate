@@ -1,0 +1,7 @@
+### Calendar day entry data (DTO).
+class: CalendarDayEntry
+
+fields:
+  entryId: int
+  moodScore: double
+  moodLabel: String

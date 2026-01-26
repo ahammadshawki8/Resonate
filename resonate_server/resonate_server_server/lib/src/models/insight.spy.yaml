@@ -1,0 +1,15 @@
+### AI-generated insight based on mood patterns.
+class: Insight
+table: insights
+
+fields:
+  userProfileId: int
+  insightText: String
+  insightType: String
+  generatedAt: DateTime
+  isRead: bool
+  relatedEntryIds: List<int>?
+
+indexes:
+  insight_user_idx:
+    fields: userProfileId

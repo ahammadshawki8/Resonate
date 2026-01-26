@@ -10,6 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
   
+  # Serverpod Client
+  resonate_server_client:
+    path: ../resonate_server/resonate_server_client
+  serverpod_flutter: 3.2.3
+  serverpod_auth_idp_flutter: 3.2.3
+  
   # State Management
   flutter_riverpod: ^2.4.9
   riverpod_annotation: ^2.3.3
@@ -34,7 +40,7 @@ dependencies:
   # audio_waveforms: ^1.0.5
   
   # Utilities
-  intl: ^0.19.0
+  intl: ^0.20.2
   uuid: ^4.2.2
   shared_preferences: ^2.2.2
   # permission_handler: ^11.1.0  # Disabled - causes Windows build issues

@@ -1,0 +1,9 @@
+### Weekly analytics summary (DTO, not stored in DB).
+class: WeeklyAnalytics
+
+fields:
+  averageMood: double
+  totalEntries: int
+  moodChange: double
+  bestDay: int?
+  dailyData: List<DailyMoodData>

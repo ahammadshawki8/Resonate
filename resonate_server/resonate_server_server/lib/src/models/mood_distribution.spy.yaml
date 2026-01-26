@@ -1,0 +1,10 @@
+### Mood distribution breakdown (DTO).
+class: MoodDistribution
+
+fields:
+  veryPositive: int
+  positive: int
+  neutral: int
+  low: int
+  veryLow: int
+  total: int

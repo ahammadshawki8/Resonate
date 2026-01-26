@@ -1,0 +1,13 @@
+### Junction table for voice entries and tags (many-to-many).
+class: EntryTag
+table: entry_tags
+
+fields:
+  voiceEntryId: int
+  tagId: int
+
+indexes:
+  entry_tag_entry_idx:
+    fields: voiceEntryId
+  entry_tag_tag_idx:
+    fields: tagId

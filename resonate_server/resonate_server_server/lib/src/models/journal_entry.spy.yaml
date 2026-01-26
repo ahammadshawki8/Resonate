@@ -1,0 +1,14 @@
+### Journal entry for wellness reflection.
+class: JournalEntry
+table: journal_entries
+
+fields:
+  userProfileId: int
+  createdAt: DateTime
+  content: String
+  prompt: String
+  moodAtTime: String?
+
+indexes:
+  journal_user_idx:
+    fields: userProfileId

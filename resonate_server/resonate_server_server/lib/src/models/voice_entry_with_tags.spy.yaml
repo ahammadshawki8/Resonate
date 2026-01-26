@@ -1,0 +1,6 @@
+### Voice entry with tags (DTO).
+class: VoiceEntryWithTags
+
+fields:
+  entry: VoiceEntry
+  tags: List<Tag>

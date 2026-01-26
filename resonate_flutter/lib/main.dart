@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/api_service.dart';
 import 'navigation/app_router.dart';
 import 'providers/app_providers.dart';
 
@@ -10,8 +11,24 @@ import 'providers/app_providers.dart';
 final ValueNotifier<ThemeMode> themeModeNotifier =
     ValueNotifier(ThemeMode.light);
 
+/// Flag to track if we're using the backend or demo mode
+bool useBackend = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Try to initialize the Serverpod API service
+  // Falls back to demo mode if server is not available
+  try {
+    await ApiService.initialize(
+      serverUrl: 'http://localhost:8080/',
+    );
+    useBackend = true;
+    debugPrint('✓ Connected to Serverpod backend');
+  } catch (e) {
+    useBackend = false;
+    debugPrint('⚠ Backend not available, using demo mode: $e');
+  }
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

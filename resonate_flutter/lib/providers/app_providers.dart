@@ -1,7 +1,9 @@
+import '../core/services/auth_service.dart';
+import '../data/repositories/repositories.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/models.dart';
-import '../data/dummy_data.dart';
+
 
 /// Auth State
 enum AuthStatus { initial, authenticated, unauthenticated }
@@ -38,49 +40,94 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier() : super(const AuthState());
 
   Future<void> checkAuthStatus() async {
-    // Simulate checking stored auth
-    await Future.delayed(const Duration(milliseconds: 500));
-    // For demo, start as unauthenticated
-    state = state.copyWith(status: AuthStatus.unauthenticated);
+    state = state.copyWith(isLoading: true);
+    final isSignedIn = AuthService.instance.isSignedIn;
+    if (isSignedIn) {
+      try {
+        final profile = await UserProfileRepository.instance.getProfile();
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: profile.toUser(),
+          isLoading: false,
+        );
+      } catch (e) {
+        state = state.copyWith(status: AuthStatus.unauthenticated, isLoading: false);
+      }
+    } else {
+      state = state.copyWith(status: AuthStatus.unauthenticated, isLoading: false);
+    }
   }
 
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Simulate login success
-    state = state.copyWith(
-      status: AuthStatus.authenticated,
-      user: DummyData.currentUser,
-      isLoading: false,
-    );
-    return true;
+    try {
+      final result = await AuthService.instance.signInWithEmail(email: email, password: password);
+      if (result.isSuccess) {
+        final profile = await UserProfileRepository.instance.getProfile();
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: profile.toUser(),
+          isLoading: false,
+        );
+        return true;
+      } else {
+        state = state.copyWith(isLoading: false, error: result.message ?? 'Login failed');
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
   }
 
-  Future<bool> signup(String name, String email, String password) async {
+  Future<bool> signup(String email, String password, {String? verificationCode}) async {
     state = state.copyWith(isLoading: true, error: null);
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Create new user
-    final newUser = User(
-      id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-      email: email,
-      name: name,
-      createdAt: DateTime.now(),
-      totalCheckins: 0,
-      currentStreak: 0,
-      averageMood: 0.0,
-    );
-
-    state = state.copyWith(
-      status: AuthStatus.authenticated,
-      user: newUser,
-      isLoading: false,
-    );
-    return true;
+    try {
+      if (verificationCode == null) {
+        // Step 1: Start registration (sends code)
+        final result = await AuthService.instance.signUpWithEmail(email: email);
+        if (result.isPendingVerification) {
+          state = state.copyWith(isLoading: false, error: result.message);
+          return false;
+        } else if (result.isSuccess) {
+          // Should not happen, registration requires verification
+          state = state.copyWith(isLoading: false);
+          return true;
+        } else {
+          state = state.copyWith(isLoading: false, error: result.message ?? 'Signup failed');
+          return false;
+        }
+      } else {
+        // Step 2: Verify code and complete registration
+        final verifyResult = await AuthService.instance.verifyEmailRegistration(code: verificationCode);
+        if (verifyResult.isPendingPassword) {
+          // Now set password
+          final completeResult = await AuthService.instance.completeRegistration(password: password);
+          if (completeResult.isSuccess) {
+            final profile = await UserProfileRepository.instance.getProfile();
+            state = state.copyWith(
+              status: AuthStatus.authenticated,
+              user: profile.toUser(),
+              isLoading: false,
+            );
+            return true;
+          } else {
+            state = state.copyWith(isLoading: false, error: completeResult.message ?? 'Signup failed');
+            return false;
+          }
+        } else {
+          state = state.copyWith(isLoading: false, error: verifyResult.message ?? 'Verification failed');
+          return false;
+        }
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
   }
 
-  void logout() {
+  void logout() async {
+    await AuthService.instance.signOut();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
@@ -105,7 +152,14 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
 
 /// Voice Entries State
 class EntriesNotifier extends StateNotifier<List<VoiceEntry>> {
-  EntriesNotifier() : super(DummyData.generateVoiceEntries());
+  EntriesNotifier() : super([]) {
+    fetchEntries();
+  }
+
+  Future<void> fetchEntries() async {
+    final entries = await VoiceEntryRepository.instance.getEntries();
+    state = entries.map((e) => e.toVoiceEntry()).toList();
+  }
 
   void addEntry(VoiceEntry entry) {
     state = [entry, ...state];
@@ -191,7 +245,14 @@ final entriesProvider =
 
 /// Insights State
 class InsightsNotifier extends StateNotifier<List<Insight>> {
-  InsightsNotifier() : super(DummyData.insights);
+  InsightsNotifier() : super([]) {
+    fetchInsights();
+  }
+
+  Future<void> fetchInsights() async {
+    final insights = await InsightRepository.instance.getInsights();
+    state = insights.map((i) => i.toInsight()).toList();
+  }
 
   void markAsRead(String id) {
     state =
@@ -220,7 +281,14 @@ final insightsProvider =
 
 /// User Settings State
 class SettingsNotifier extends StateNotifier<UserSettings> {
-  SettingsNotifier() : super(DummyData.userSettings);
+  SettingsNotifier() : super(UserSettingsEmpty.empty()) {
+    fetchSettings();
+  }
+
+  Future<void> fetchSettings() async {
+    final settings = await SettingsRepository.instance.getSettings();
+    state = settings.toUserSettings();
+  }
 
   void updateReminderTime(TimeOfDay time) {
     state = state.copyWith(reminderTime: time);
@@ -257,11 +325,16 @@ final settingsProvider =
 });
 
 /// Tags State
-final tagsProvider = StateProvider<List<Tag>>((ref) => DummyData.tags);
+final tagsProvider = FutureProvider<List<Tag>>((ref) async {
+  final tags = await TagRepository.instance.getTags();
+  return tags.map((t) => t.toTag()).toList();
+});
 
 /// Patterns State
-final patternsProvider =
-    StateProvider<List<MoodPattern>>((ref) => DummyData.patterns);
+final patternsProvider = FutureProvider<List<MoodPattern>>((ref) async {
+  final patterns = await AnalyticsRepository.instance.getPatterns();
+  return patterns.map((p) => p.toMoodPattern()).toList();
+});
 
 /// Recording State
 class RecordingState {

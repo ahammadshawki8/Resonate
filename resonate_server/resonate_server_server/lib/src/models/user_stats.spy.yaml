@@ -1,0 +1,11 @@
+### User statistics summary (DTO).
+class: UserStats
+
+fields:
+  totalCheckins: int
+  currentStreak: int
+  longestStreak: int
+  averageMood: double
+  mostCommonMood: String?
+  mostUsedTag: String?
+  daysSinceStart: int

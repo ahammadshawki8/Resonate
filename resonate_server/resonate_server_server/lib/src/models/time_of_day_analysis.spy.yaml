@@ -1,0 +1,13 @@
+### Time of day analysis (DTO).
+class: TimeOfDayAnalysis
+
+fields:
+  morningAvg: double
+  afternoonAvg: double
+  eveningAvg: double
+  nightAvg: double
+  bestTimeOfDay: String
+  morningCount: int
+  afternoonCount: int
+  eveningCount: int
+  nightCount: int

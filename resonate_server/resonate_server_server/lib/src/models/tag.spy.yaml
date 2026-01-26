@@ -1,0 +1,13 @@
+### Tag for categorizing entries.
+class: Tag
+table: tags
+
+fields:
+  userProfileId: int
+  name: String
+  color: String
+  usageCount: int
+
+indexes:
+  tag_user_idx:
+    fields: userProfileId

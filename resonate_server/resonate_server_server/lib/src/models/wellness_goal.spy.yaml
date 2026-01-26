@@ -1,0 +1,15 @@
+### Wellness goal for user's wellness journey.
+class: WellnessGoal
+table: wellness_goals
+
+fields:
+  userProfileId: int
+  createdAt: DateTime
+  title: String
+  emoji: String
+  isCompleted: bool
+  completedAt: DateTime?
+
+indexes:
+  goal_user_idx:
+    fields: userProfileId

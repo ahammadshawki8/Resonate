@@ -1,0 +1,34 @@
+### Voice entry recording with analysis data.
+class: VoiceEntry
+table: voice_entries
+
+fields:
+  userProfileId: int
+  recordedAt: DateTime
+  language: String
+  audioUrl: String?
+  durationSeconds: double
+  pitchMean: double
+  pitchStd: double
+  energyMean: double
+  tempo: double
+  silenceRatio: double
+  transcript: String?
+  emotionKeywords: List<String>
+  sentimentScore: double
+  detectedEmotions: List<String>
+  topicContext: String?
+  acousticMoodScore: double
+  semanticMoodScore: double
+  finalMoodScore: double
+  moodLabel: String
+  confidence: double
+  signalAlignment: double
+  note: String?
+  privacyLevel: String
+
+indexes:
+  voice_entry_user_idx:
+    fields: userProfileId
+  voice_entry_recorded_idx:
+    fields: recordedAt

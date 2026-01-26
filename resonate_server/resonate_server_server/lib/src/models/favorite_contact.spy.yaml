@@ -1,0 +1,15 @@
+### Favorite contact for reaching out when feeling down.
+class: FavoriteContact
+table: favorite_contacts
+
+fields:
+  userProfileId: int
+  createdAt: DateTime
+  name: String
+  emoji: String
+  type: String
+  phone: String?
+
+indexes:
+  contact_user_idx:
+    fields: userProfileId

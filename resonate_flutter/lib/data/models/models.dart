@@ -1,4 +1,106 @@
+
 import 'package:flutter/material.dart';
+// --- Serverpod Model Mappers ---
+import 'package:resonate_server_client/resonate_server_client.dart' as sp;
+
+extension UserProfileToUser on sp.UserProfile {
+  User toUser() => User(
+    id: authUserId.toString(),
+    email: email,
+    name: displayName,
+    avatarUrl: avatarUrl,
+    createdAt: createdAt,
+    totalCheckins: totalCheckins,
+    currentStreak: currentStreak,
+    averageMood: averageMood,
+  );
+}
+
+extension VoiceEntryWithTagsToVoiceEntry on sp.VoiceEntryWithTags {
+  VoiceEntry toVoiceEntry() => VoiceEntry(
+    id: entry.id.toString(),
+    userId: entry.userProfileId.toString(),
+    recordedAt: entry.recordedAt,
+    language: entry.language,
+    audioUrl: entry.audioUrl,
+    durationSeconds: entry.durationSeconds,
+    pitchMean: entry.pitchMean,
+    pitchStd: entry.pitchStd,
+    energyMean: entry.energyMean,
+    tempo: entry.tempo,
+    silenceRatio: entry.silenceRatio,
+    transcript: entry.transcript,
+    emotionKeywords: entry.emotionKeywords,
+    sentimentScore: entry.sentimentScore,
+    detectedEmotions: entry.detectedEmotions,
+    topicContext: entry.topicContext,
+    acousticMoodScore: entry.acousticMoodScore,
+    semanticMoodScore: entry.semanticMoodScore,
+    finalMoodScore: entry.finalMoodScore,
+    moodLabel: entry.moodLabel,
+    confidence: entry.confidence,
+    signalAlignment: entry.signalAlignment,
+    note: entry.note,
+    tags: tags.map((t) => t.toTag()).toList(),
+    privacyLevel: entry.privacyLevel,
+  );
+}
+
+extension TagServerpodToTag on sp.Tag {
+  Tag toTag() => Tag(
+    id: id?.toString() ?? '',
+    name: name,
+    color: color,
+    usageCount: usageCount,
+  );
+}
+
+extension InsightServerpodToInsight on sp.Insight {
+  Insight toInsight() => Insight(
+    id: id?.toString() ?? '',
+    userId: userProfileId.toString(),
+    insightText: insightText,
+    insightType: insightType,
+    generatedAt: generatedAt,
+    isRead: isRead,
+  );
+}
+
+extension MoodPatternServerpodToMoodPattern on sp.MoodPattern {
+  MoodPattern toMoodPattern() => MoodPattern(
+    id: id?.toString() ?? '',
+    patternType: patternType,
+    description: description,
+    confidence: confidence,
+    detectedAt: detectedAt,
+  );
+}
+
+extension UserSettingsServerpodToUserSettings on sp.UserSettings {
+  UserSettings toUserSettings() => UserSettings(
+    userId: userProfileId.toString(),
+    reminderTime: TimeOfDay(hour: reminderHour, minute: reminderMinute),
+    reminderEnabled: reminderEnabled,
+    darkMode: darkMode,
+    uiLanguage: uiLanguage,
+    voiceLanguage: voiceLanguage,
+    privacyLevel: privacyLevel,
+    notificationsEnabled: notificationsEnabled,
+  );
+}
+extension UserSettingsEmpty on UserSettings {
+  static UserSettings empty() => UserSettings(
+    userId: '',
+    reminderTime: const TimeOfDay(hour: 9, minute: 0),
+    reminderEnabled: false,
+    darkMode: false,
+    uiLanguage: 'en',
+    voiceLanguage: 'en',
+    privacyLevel: 'full',
+    notificationsEnabled: false,
+  );
+}
+
 
 class VoiceEntry {
   final String id;

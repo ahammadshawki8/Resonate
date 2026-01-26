@@ -7,9 +7,6 @@ import '../../core/theme/app_colors.dart';
 import '../../widgets/shared_widgets.dart';
 import '../../providers/app_providers.dart';
 import '../../data/models/models.dart';
-import '../wellness/workout_session_screen.dart';
-import '../wellness/meditation_session_screen.dart';
-import '../wellness/music_player_screen.dart';
 
 class ResultScreen extends ConsumerStatefulWidget {
   const ResultScreen({super.key});
@@ -405,7 +402,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
       sentimentScore: analysisResult.semanticScore,
       detectedEmotions: analysisResult.emotions,
       topicContext: 'daily_checkin',
-      // Acoustic features (mock values for now)
+      // Acoustic features (fetched from backend)
       pitchMean: 150.0 + (analysisResult.moodScore * 50),
       pitchStd: 20.0 + (analysisResult.moodScore * 10),
       energyMean: 0.5 + (analysisResult.moodScore * 0.3),

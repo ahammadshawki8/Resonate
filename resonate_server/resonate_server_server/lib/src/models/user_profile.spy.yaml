@@ -1,0 +1,20 @@
+### User profile information (separate from auth user).
+class: UserProfile
+table: user_profiles
+
+fields:
+  authUserId: UuidValue
+  displayName: String
+  email: String
+  avatarUrl: String?
+  createdAt: DateTime
+  lastLoginAt: DateTime?
+  totalCheckins: int
+  currentStreak: int
+  longestStreak: int
+  averageMood: double
+
+indexes:
+  user_profile_auth_idx:
+    fields: authUserId
+    unique: true

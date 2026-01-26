@@ -1,0 +1,12 @@
+### Gratitude entry for daily gratitude practice.
+class: GratitudeEntry
+table: gratitude_entries
+
+fields:
+  userProfileId: int
+  createdAt: DateTime
+  items: List<String>
+
+indexes:
+  gratitude_user_idx:
+    fields: userProfileId

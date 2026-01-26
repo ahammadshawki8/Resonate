@@ -1,0 +1,7 @@
+### Calendar month data (DTO).
+class: CalendarMonth
+
+fields:
+  year: int
+  month: int
+  entries: Map<int, CalendarDayEntry>

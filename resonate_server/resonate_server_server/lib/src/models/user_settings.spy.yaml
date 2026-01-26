@@ -1,0 +1,19 @@
+### User settings and preferences.
+class: UserSettings
+table: user_settings
+
+fields:
+  userProfileId: int
+  reminderHour: int
+  reminderMinute: int
+  reminderEnabled: bool
+  darkMode: bool
+  uiLanguage: String
+  voiceLanguage: String
+  privacyLevel: String
+  notificationsEnabled: bool
+
+indexes:
+  settings_user_idx:
+    fields: userProfileId
+    unique: true
