@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../core/theme/app_colors.dart';
 import '../../widgets/shared_widgets.dart';
 import '../../providers/app_providers.dart';
@@ -424,16 +426,132 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
     // Add to entries
     ref.read(entriesProvider.notifier).addEntry(finalEntry);
 
+    // Generate insight if user has enough entries
+    _generateInsightIfNeeded(analysisResult);
+
     // Get the quick actions from the analysis result's personalized response
-    // Filter to only include actions that exist in home screen
-    final allowedActions = {'breathing', 'journal', 'meditate', 'music', 'call', 'workout', 'gratitude', 'goals'};
-    final quickActions = (analysisResult.personalizedResponse?.quickActions ?? [])
-        .where((action) => allowedActions.contains(action.actionType))
-        .take(3)
-        .toList();
+    // If no personalized response, generate quick actions based on mood
+    List<QuickAction> quickActions;
+    
+    if (analysisResult.personalizedResponse?.quickActions != null) {
+      // Use personalized quick actions from backend
+      final allowedActions = {'breathing', 'journal', 'meditate', 'music', 'call', 'workout', 'gratitude', 'goals'};
+      quickActions = analysisResult.personalizedResponse!.quickActions
+          .where((action) => allowedActions.contains(action.actionType))
+          .take(3)
+          .toList();
+    } else {
+      // Generate quick actions based on mood score
+      quickActions = _generateQuickActionsFromMood(analysisResult.moodScore);
+    }
 
     // Show quick actions modal (will clear state and navigate when dismissed)
     _showQuickActionsSuggestionModal(quickActions);
+  }
+
+  List<QuickAction> _generateQuickActionsFromMood(double moodScore) {
+    // Generate appropriate quick actions based on mood
+    if (moodScore >= 0.7) {
+      // Very positive - celebrate and maintain
+      return [
+        QuickAction(
+          id: 'gratitude_1',
+          actionType: 'gratitude',
+          label: 'Gratitude',
+          emoji: '🙏',
+          color: AppColors.accent,
+        ),
+        QuickAction(
+          id: 'journal_1',
+          actionType: 'journal',
+          label: 'Journal',
+          emoji: '📝',
+          color: AppColors.primary,
+        ),
+        QuickAction(
+          id: 'music_1',
+          actionType: 'music',
+          label: 'Music',
+          emoji: '🎵',
+          color: AppColors.secondary,
+        ),
+      ];
+    } else if (moodScore >= 0.5) {
+      // Positive - maintain and grow
+      return [
+        QuickAction(
+          id: 'workout_1',
+          actionType: 'workout',
+          label: 'Workout',
+          emoji: '💪',
+          color: AppColors.success,
+        ),
+        QuickAction(
+          id: 'goals_1',
+          actionType: 'goals',
+          label: 'Goals',
+          emoji: '🎯',
+          color: AppColors.primary,
+        ),
+        QuickAction(
+          id: 'music_2',
+          actionType: 'music',
+          label: 'Music',
+          emoji: '🎵',
+          color: AppColors.secondary,
+        ),
+      ];
+    } else if (moodScore >= 0.3) {
+      // Neutral/Low - uplift and support
+      return [
+        QuickAction(
+          id: 'breathing_1',
+          actionType: 'breathing',
+          label: 'Breathing',
+          emoji: '🌬️',
+          color: AppColors.primary,
+        ),
+        QuickAction(
+          id: 'meditate_1',
+          actionType: 'meditate',
+          label: 'Meditate',
+          emoji: '🧘',
+          color: AppColors.accent,
+        ),
+        QuickAction(
+          id: 'call_1',
+          actionType: 'call',
+          label: 'Call Someone',
+          emoji: '📞',
+          color: AppColors.secondary,
+        ),
+      ];
+    } else {
+      // Low mood - immediate support
+      return [
+        QuickAction(
+          id: 'breathing_2',
+          actionType: 'breathing',
+          label: 'Breathing',
+          emoji: '🌬️',
+          color: AppColors.primary,
+        ),
+        QuickAction(
+          id: 'call_2',
+          actionType: 'call',
+          label: 'Call Someone',
+          emoji: '📞',
+          color: AppColors.error,
+        ),
+        QuickAction(
+          id: 'meditate_2',
+          actionType: 'meditate',
+          label: 'Meditate',
+          emoji: '🧘',
+          color: AppColors.accent,
+        ),
+      ];
+    }
   }
 
   void _showQuickActionsSuggestionModal(List<QuickAction> quickActions) {
@@ -887,5 +1005,61 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
         ],
       ),
     ).animate().fadeIn(delay: 700.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  void _generateInsightIfNeeded(AnalysisResult analysisResult) async {
+    final entries = ref.read(entriesProvider);
+    final entryCount = entries.length;
+
+    // Only generate insights at certain milestones or conditions
+    bool shouldGenerate = false;
+    
+    if (entryCount == 1 || entryCount == 3 || entryCount == 7 || 
+        entryCount % 5 == 0 || analysisResult.moodScore < 0.3 || 
+        analysisResult.moodScore >= 0.8) {
+      shouldGenerate = true;
+    }
+    
+    if (!shouldGenerate) return;
+    
+    try {
+      // Prepare entry data for AI
+      final entryData = entries.take(10).map((e) => {
+        'final_mood_score': e.finalMoodScore,
+        'detected_emotions': e.detectedEmotions,
+        'transcript': e.transcript ?? '',
+        'recorded_at': e.recordedAt.toIso8601String(),
+      }).toList();
+      
+      // Call Python AI service to generate insight
+      final response = await http.post(
+        Uri.parse('http://10.39.84.77:8001/insights/generate'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'entries': entryData}),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        // Add AI-generated insight
+        ref.read(insightsProvider.notifier).addInsight(
+          Insight(
+            id: 'insight_${DateTime.now().millisecondsSinceEpoch}',
+            userId: 'user_001',
+            insightText: data['insight_text'],
+            insightType: data['insight_type'],
+            generatedAt: DateTime.now(),
+            isRead: false,
+          ),
+        );
+        
+        debugPrint('AI insight generated successfully');
+      } else {
+        debugPrint('Failed to generate AI insight: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error generating AI insight: $e');
+      // Silently fail - insights are not critical
+    }
   }
 }

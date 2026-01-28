@@ -19,43 +19,47 @@ import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
 import 'analysis_result.dart' as _i5;
 import 'calendar_day_entry.dart' as _i6;
 import 'calendar_month.dart' as _i7;
-import 'daily_mood_data.dart' as _i8;
-import 'entry_tag.dart' as _i9;
-import 'favorite_contact.dart' as _i10;
-import 'gratitude_entry.dart' as _i11;
-import 'greetings/greeting.dart' as _i12;
-import 'insight.dart' as _i13;
-import 'journal_entry.dart' as _i14;
-import 'mood_distribution.dart' as _i15;
-import 'mood_pattern.dart' as _i16;
-import 'tag.dart' as _i17;
-import 'time_of_day_analysis.dart' as _i18;
-import 'user_profile.dart' as _i19;
-import 'user_settings.dart' as _i20;
-import 'user_stats.dart' as _i21;
-import 'voice_entry.dart' as _i22;
-import 'voice_entry_with_tags.dart' as _i23;
-import 'weekly_analytics.dart' as _i24;
-import 'wellness_goal.dart' as _i25;
-import 'package:resonate_server_server/src/generated/mood_pattern.dart' as _i26;
-import 'package:resonate_server_server/src/generated/insight.dart' as _i27;
-import 'package:resonate_server_server/src/generated/tag.dart' as _i28;
+import 'contact.dart' as _i8;
+import 'daily_mood_data.dart' as _i9;
+import 'entry_tag.dart' as _i10;
+import 'favorite_contact.dart' as _i11;
+import 'goal.dart' as _i12;
+import 'gratitude_entry.dart' as _i13;
+import 'greetings/greeting.dart' as _i14;
+import 'insight.dart' as _i15;
+import 'journal_entry.dart' as _i16;
+import 'mood_distribution.dart' as _i17;
+import 'mood_pattern.dart' as _i18;
+import 'tag.dart' as _i19;
+import 'time_of_day_analysis.dart' as _i20;
+import 'user_profile.dart' as _i21;
+import 'user_settings.dart' as _i22;
+import 'user_stats.dart' as _i23;
+import 'voice_entry.dart' as _i24;
+import 'voice_entry_with_tags.dart' as _i25;
+import 'weekly_analytics.dart' as _i26;
+import 'wellness_goal.dart' as _i27;
+import 'package:resonate_server_server/src/generated/mood_pattern.dart' as _i28;
+import 'package:resonate_server_server/src/generated/insight.dart' as _i29;
+import 'package:resonate_server_server/src/generated/tag.dart' as _i30;
 import 'package:resonate_server_server/src/generated/voice_entry_with_tags.dart'
-    as _i29;
-import 'package:resonate_server_server/src/generated/journal_entry.dart'
-    as _i30;
-import 'package:resonate_server_server/src/generated/gratitude_entry.dart'
     as _i31;
-import 'package:resonate_server_server/src/generated/wellness_goal.dart'
+import 'package:resonate_server_server/src/generated/journal_entry.dart'
     as _i32;
-import 'package:resonate_server_server/src/generated/favorite_contact.dart'
+import 'package:resonate_server_server/src/generated/gratitude_entry.dart'
     as _i33;
+import 'package:resonate_server_server/src/generated/wellness_goal.dart'
+    as _i34;
+import 'package:resonate_server_server/src/generated/favorite_contact.dart'
+    as _i35;
 export 'analysis_result.dart';
 export 'calendar_day_entry.dart';
 export 'calendar_month.dart';
+export 'contact.dart';
 export 'daily_mood_data.dart';
 export 'entry_tag.dart';
 export 'favorite_contact.dart';
+export 'goal.dart';
 export 'gratitude_entry.dart';
 export 'greetings/greeting.dart';
 export 'insight.dart';
@@ -80,6 +84,92 @@ class Protocol extends _i1.SerializationManagerServer {
   static final Protocol _instance = Protocol._();
 
   static final List<_i2.TableDefinition> targetTableDefinitions = [
+    _i2.TableDefinition(
+      name: 'contacts',
+      dartName: 'Contact',
+      schema: 'public',
+      module: 'resonate_server',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'contacts_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'userProfileId',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'name',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'phone',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'email',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'relationship',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'emoji',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'isPrimary',
+          columnType: _i2.ColumnType.boolean,
+          isNullable: true,
+          dartType: 'bool?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'updatedAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'contacts_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
     _i2.TableDefinition(
       name: 'entry_tags',
       dartName: 'EntryTag',
@@ -232,6 +322,92 @@ class Protocol extends _i1.SerializationManagerServer {
       managed: true,
     ),
     _i2.TableDefinition(
+      name: 'goals',
+      dartName: 'Goal',
+      schema: 'public',
+      module: 'resonate_server',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'goals_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'userProfileId',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'title',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'description',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'category',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'targetDate',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'isCompleted',
+          columnType: _i2.ColumnType.boolean,
+          isNullable: true,
+          dartType: 'bool?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'completedAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'updatedAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'goals_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
       name: 'gratitude_entries',
       dartName: 'GratitudeEntry',
       schema: 'public',
@@ -247,14 +423,14 @@ class Protocol extends _i1.SerializationManagerServer {
         _i2.ColumnDefinition(
           name: 'userProfileId',
           columnType: _i2.ColumnType.bigint,
-          isNullable: false,
-          dartType: 'int',
+          isNullable: true,
+          dartType: 'int?',
         ),
         _i2.ColumnDefinition(
           name: 'createdAt',
           columnType: _i2.ColumnType.timestampWithoutTimeZone,
-          isNullable: false,
-          dartType: 'DateTime',
+          isNullable: true,
+          dartType: 'DateTime?',
         ),
         _i2.ColumnDefinition(
           name: 'items',
@@ -277,19 +453,6 @@ class Protocol extends _i1.SerializationManagerServer {
           type: 'btree',
           isUnique: true,
           isPrimary: true,
-        ),
-        _i2.IndexDefinition(
-          indexName: 'gratitude_user_idx',
-          tableSpace: null,
-          elements: [
-            _i2.IndexElementDefinition(
-              type: _i2.IndexElementDefinitionType.column,
-              definition: 'userProfileId',
-            ),
-          ],
-          type: 'btree',
-          isUnique: false,
-          isPrimary: false,
         ),
       ],
       managed: true,
@@ -391,14 +554,14 @@ class Protocol extends _i1.SerializationManagerServer {
         _i2.ColumnDefinition(
           name: 'userProfileId',
           columnType: _i2.ColumnType.bigint,
-          isNullable: false,
-          dartType: 'int',
+          isNullable: true,
+          dartType: 'int?',
         ),
         _i2.ColumnDefinition(
           name: 'createdAt',
           columnType: _i2.ColumnType.timestampWithoutTimeZone,
-          isNullable: false,
-          dartType: 'DateTime',
+          isNullable: true,
+          dartType: 'DateTime?',
         ),
         _i2.ColumnDefinition(
           name: 'content',
@@ -433,19 +596,6 @@ class Protocol extends _i1.SerializationManagerServer {
           type: 'btree',
           isUnique: true,
           isPrimary: true,
-        ),
-        _i2.IndexDefinition(
-          indexName: 'journal_user_idx',
-          tableSpace: null,
-          elements: [
-            _i2.IndexElementDefinition(
-              type: _i2.IndexElementDefinitionType.column,
-              definition: 'userProfileId',
-            ),
-          ],
-          type: 'btree',
-          isUnique: false,
-          isPrimary: false,
         ),
       ],
       managed: true,
@@ -1116,59 +1266,65 @@ class Protocol extends _i1.SerializationManagerServer {
     if (t == _i7.CalendarMonth) {
       return _i7.CalendarMonth.fromJson(data) as T;
     }
-    if (t == _i8.DailyMoodData) {
-      return _i8.DailyMoodData.fromJson(data) as T;
+    if (t == _i8.Contact) {
+      return _i8.Contact.fromJson(data) as T;
     }
-    if (t == _i9.EntryTag) {
-      return _i9.EntryTag.fromJson(data) as T;
+    if (t == _i9.DailyMoodData) {
+      return _i9.DailyMoodData.fromJson(data) as T;
     }
-    if (t == _i10.FavoriteContact) {
-      return _i10.FavoriteContact.fromJson(data) as T;
+    if (t == _i10.EntryTag) {
+      return _i10.EntryTag.fromJson(data) as T;
     }
-    if (t == _i11.GratitudeEntry) {
-      return _i11.GratitudeEntry.fromJson(data) as T;
+    if (t == _i11.FavoriteContact) {
+      return _i11.FavoriteContact.fromJson(data) as T;
     }
-    if (t == _i12.Greeting) {
-      return _i12.Greeting.fromJson(data) as T;
+    if (t == _i12.Goal) {
+      return _i12.Goal.fromJson(data) as T;
     }
-    if (t == _i13.Insight) {
-      return _i13.Insight.fromJson(data) as T;
+    if (t == _i13.GratitudeEntry) {
+      return _i13.GratitudeEntry.fromJson(data) as T;
     }
-    if (t == _i14.JournalEntry) {
-      return _i14.JournalEntry.fromJson(data) as T;
+    if (t == _i14.Greeting) {
+      return _i14.Greeting.fromJson(data) as T;
     }
-    if (t == _i15.MoodDistribution) {
-      return _i15.MoodDistribution.fromJson(data) as T;
+    if (t == _i15.Insight) {
+      return _i15.Insight.fromJson(data) as T;
     }
-    if (t == _i16.MoodPattern) {
-      return _i16.MoodPattern.fromJson(data) as T;
+    if (t == _i16.JournalEntry) {
+      return _i16.JournalEntry.fromJson(data) as T;
     }
-    if (t == _i17.Tag) {
-      return _i17.Tag.fromJson(data) as T;
+    if (t == _i17.MoodDistribution) {
+      return _i17.MoodDistribution.fromJson(data) as T;
     }
-    if (t == _i18.TimeOfDayAnalysis) {
-      return _i18.TimeOfDayAnalysis.fromJson(data) as T;
+    if (t == _i18.MoodPattern) {
+      return _i18.MoodPattern.fromJson(data) as T;
     }
-    if (t == _i19.UserProfile) {
-      return _i19.UserProfile.fromJson(data) as T;
+    if (t == _i19.Tag) {
+      return _i19.Tag.fromJson(data) as T;
     }
-    if (t == _i20.UserSettings) {
-      return _i20.UserSettings.fromJson(data) as T;
+    if (t == _i20.TimeOfDayAnalysis) {
+      return _i20.TimeOfDayAnalysis.fromJson(data) as T;
     }
-    if (t == _i21.UserStats) {
-      return _i21.UserStats.fromJson(data) as T;
+    if (t == _i21.UserProfile) {
+      return _i21.UserProfile.fromJson(data) as T;
     }
-    if (t == _i22.VoiceEntry) {
-      return _i22.VoiceEntry.fromJson(data) as T;
+    if (t == _i22.UserSettings) {
+      return _i22.UserSettings.fromJson(data) as T;
     }
-    if (t == _i23.VoiceEntryWithTags) {
-      return _i23.VoiceEntryWithTags.fromJson(data) as T;
+    if (t == _i23.UserStats) {
+      return _i23.UserStats.fromJson(data) as T;
     }
-    if (t == _i24.WeeklyAnalytics) {
-      return _i24.WeeklyAnalytics.fromJson(data) as T;
+    if (t == _i24.VoiceEntry) {
+      return _i24.VoiceEntry.fromJson(data) as T;
     }
-    if (t == _i25.WellnessGoal) {
-      return _i25.WellnessGoal.fromJson(data) as T;
+    if (t == _i25.VoiceEntryWithTags) {
+      return _i25.VoiceEntryWithTags.fromJson(data) as T;
+    }
+    if (t == _i26.WeeklyAnalytics) {
+      return _i26.WeeklyAnalytics.fromJson(data) as T;
+    }
+    if (t == _i27.WellnessGoal) {
+      return _i27.WellnessGoal.fromJson(data) as T;
     }
     if (t == _i1.getType<_i5.AnalysisResult?>()) {
       return (data != null ? _i5.AnalysisResult.fromJson(data) : null) as T;
@@ -1179,63 +1335,75 @@ class Protocol extends _i1.SerializationManagerServer {
     if (t == _i1.getType<_i7.CalendarMonth?>()) {
       return (data != null ? _i7.CalendarMonth.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i8.DailyMoodData?>()) {
-      return (data != null ? _i8.DailyMoodData.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i8.Contact?>()) {
+      return (data != null ? _i8.Contact.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i9.EntryTag?>()) {
-      return (data != null ? _i9.EntryTag.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i9.DailyMoodData?>()) {
+      return (data != null ? _i9.DailyMoodData.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i10.FavoriteContact?>()) {
-      return (data != null ? _i10.FavoriteContact.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i10.EntryTag?>()) {
+      return (data != null ? _i10.EntryTag.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i11.GratitudeEntry?>()) {
-      return (data != null ? _i11.GratitudeEntry.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i11.FavoriteContact?>()) {
+      return (data != null ? _i11.FavoriteContact.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i12.Greeting?>()) {
-      return (data != null ? _i12.Greeting.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i12.Goal?>()) {
+      return (data != null ? _i12.Goal.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i13.Insight?>()) {
-      return (data != null ? _i13.Insight.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i13.GratitudeEntry?>()) {
+      return (data != null ? _i13.GratitudeEntry.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i14.JournalEntry?>()) {
-      return (data != null ? _i14.JournalEntry.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i14.Greeting?>()) {
+      return (data != null ? _i14.Greeting.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i15.MoodDistribution?>()) {
-      return (data != null ? _i15.MoodDistribution.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i15.Insight?>()) {
+      return (data != null ? _i15.Insight.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i16.MoodPattern?>()) {
-      return (data != null ? _i16.MoodPattern.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i16.JournalEntry?>()) {
+      return (data != null ? _i16.JournalEntry.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i17.Tag?>()) {
-      return (data != null ? _i17.Tag.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i17.MoodDistribution?>()) {
+      return (data != null ? _i17.MoodDistribution.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i18.TimeOfDayAnalysis?>()) {
-      return (data != null ? _i18.TimeOfDayAnalysis.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i18.MoodPattern?>()) {
+      return (data != null ? _i18.MoodPattern.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i19.UserProfile?>()) {
-      return (data != null ? _i19.UserProfile.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i19.Tag?>()) {
+      return (data != null ? _i19.Tag.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i20.UserSettings?>()) {
-      return (data != null ? _i20.UserSettings.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i20.TimeOfDayAnalysis?>()) {
+      return (data != null ? _i20.TimeOfDayAnalysis.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i21.UserStats?>()) {
-      return (data != null ? _i21.UserStats.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i21.UserProfile?>()) {
+      return (data != null ? _i21.UserProfile.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i22.VoiceEntry?>()) {
-      return (data != null ? _i22.VoiceEntry.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i22.UserSettings?>()) {
+      return (data != null ? _i22.UserSettings.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i23.VoiceEntryWithTags?>()) {
-      return (data != null ? _i23.VoiceEntryWithTags.fromJson(data) : null)
+    if (t == _i1.getType<_i23.UserStats?>()) {
+      return (data != null ? _i23.UserStats.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i24.VoiceEntry?>()) {
+      return (data != null ? _i24.VoiceEntry.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i25.VoiceEntryWithTags?>()) {
+      return (data != null ? _i25.VoiceEntryWithTags.fromJson(data) : null)
           as T;
     }
-    if (t == _i1.getType<_i24.WeeklyAnalytics?>()) {
-      return (data != null ? _i24.WeeklyAnalytics.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i26.WeeklyAnalytics?>()) {
+      return (data != null ? _i26.WeeklyAnalytics.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i25.WellnessGoal?>()) {
-      return (data != null ? _i25.WellnessGoal.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i27.WellnessGoal?>()) {
+      return (data != null ? _i27.WellnessGoal.fromJson(data) : null) as T;
     }
     if (t == List<String>) {
       return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
+    if (t == _i1.getType<List<String>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<String>(e)).toList()
+              : null)
+          as T;
     }
     if (t == Map<int, _i6.CalendarDayEntry>) {
       return Map.fromEntries(
@@ -1257,58 +1425,58 @@ class Protocol extends _i1.SerializationManagerServer {
               : null)
           as T;
     }
-    if (t == List<_i17.Tag>) {
-      return (data as List).map((e) => deserialize<_i17.Tag>(e)).toList() as T;
+    if (t == List<_i19.Tag>) {
+      return (data as List).map((e) => deserialize<_i19.Tag>(e)).toList() as T;
     }
-    if (t == List<_i8.DailyMoodData>) {
+    if (t == List<_i9.DailyMoodData>) {
       return (data as List)
-              .map((e) => deserialize<_i8.DailyMoodData>(e))
+              .map((e) => deserialize<_i9.DailyMoodData>(e))
               .toList()
           as T;
     }
-    if (t == List<_i26.MoodPattern>) {
+    if (t == List<_i28.MoodPattern>) {
       return (data as List)
-              .map((e) => deserialize<_i26.MoodPattern>(e))
+              .map((e) => deserialize<_i28.MoodPattern>(e))
               .toList()
           as T;
     }
-    if (t == List<_i27.Insight>) {
-      return (data as List).map((e) => deserialize<_i27.Insight>(e)).toList()
+    if (t == List<_i29.Insight>) {
+      return (data as List).map((e) => deserialize<_i29.Insight>(e)).toList()
           as T;
     }
-    if (t == List<_i28.Tag>) {
-      return (data as List).map((e) => deserialize<_i28.Tag>(e)).toList() as T;
+    if (t == List<_i30.Tag>) {
+      return (data as List).map((e) => deserialize<_i30.Tag>(e)).toList() as T;
     }
-    if (t == List<_i29.VoiceEntryWithTags>) {
+    if (t == List<_i31.VoiceEntryWithTags>) {
       return (data as List)
-              .map((e) => deserialize<_i29.VoiceEntryWithTags>(e))
+              .map((e) => deserialize<_i31.VoiceEntryWithTags>(e))
               .toList()
           as T;
     }
-    if (t == List<_i30.JournalEntry>) {
+    if (t == List<_i32.JournalEntry>) {
       return (data as List)
-              .map((e) => deserialize<_i30.JournalEntry>(e))
+              .map((e) => deserialize<_i32.JournalEntry>(e))
               .toList()
           as T;
     }
-    if (t == List<_i31.GratitudeEntry>) {
+    if (t == List<_i33.GratitudeEntry>) {
       return (data as List)
-              .map((e) => deserialize<_i31.GratitudeEntry>(e))
+              .map((e) => deserialize<_i33.GratitudeEntry>(e))
               .toList()
           as T;
     }
     if (t == List<String>) {
       return (data as List).map((e) => deserialize<String>(e)).toList() as T;
     }
-    if (t == List<_i32.WellnessGoal>) {
+    if (t == List<_i34.WellnessGoal>) {
       return (data as List)
-              .map((e) => deserialize<_i32.WellnessGoal>(e))
+              .map((e) => deserialize<_i34.WellnessGoal>(e))
               .toList()
           as T;
     }
-    if (t == List<_i33.FavoriteContact>) {
+    if (t == List<_i35.FavoriteContact>) {
       return (data as List)
-              .map((e) => deserialize<_i33.FavoriteContact>(e))
+              .map((e) => deserialize<_i35.FavoriteContact>(e))
               .toList()
           as T;
     }
@@ -1329,24 +1497,26 @@ class Protocol extends _i1.SerializationManagerServer {
       _i5.AnalysisResult => 'AnalysisResult',
       _i6.CalendarDayEntry => 'CalendarDayEntry',
       _i7.CalendarMonth => 'CalendarMonth',
-      _i8.DailyMoodData => 'DailyMoodData',
-      _i9.EntryTag => 'EntryTag',
-      _i10.FavoriteContact => 'FavoriteContact',
-      _i11.GratitudeEntry => 'GratitudeEntry',
-      _i12.Greeting => 'Greeting',
-      _i13.Insight => 'Insight',
-      _i14.JournalEntry => 'JournalEntry',
-      _i15.MoodDistribution => 'MoodDistribution',
-      _i16.MoodPattern => 'MoodPattern',
-      _i17.Tag => 'Tag',
-      _i18.TimeOfDayAnalysis => 'TimeOfDayAnalysis',
-      _i19.UserProfile => 'UserProfile',
-      _i20.UserSettings => 'UserSettings',
-      _i21.UserStats => 'UserStats',
-      _i22.VoiceEntry => 'VoiceEntry',
-      _i23.VoiceEntryWithTags => 'VoiceEntryWithTags',
-      _i24.WeeklyAnalytics => 'WeeklyAnalytics',
-      _i25.WellnessGoal => 'WellnessGoal',
+      _i8.Contact => 'Contact',
+      _i9.DailyMoodData => 'DailyMoodData',
+      _i10.EntryTag => 'EntryTag',
+      _i11.FavoriteContact => 'FavoriteContact',
+      _i12.Goal => 'Goal',
+      _i13.GratitudeEntry => 'GratitudeEntry',
+      _i14.Greeting => 'Greeting',
+      _i15.Insight => 'Insight',
+      _i16.JournalEntry => 'JournalEntry',
+      _i17.MoodDistribution => 'MoodDistribution',
+      _i18.MoodPattern => 'MoodPattern',
+      _i19.Tag => 'Tag',
+      _i20.TimeOfDayAnalysis => 'TimeOfDayAnalysis',
+      _i21.UserProfile => 'UserProfile',
+      _i22.UserSettings => 'UserSettings',
+      _i23.UserStats => 'UserStats',
+      _i24.VoiceEntry => 'VoiceEntry',
+      _i25.VoiceEntryWithTags => 'VoiceEntryWithTags',
+      _i26.WeeklyAnalytics => 'WeeklyAnalytics',
+      _i27.WellnessGoal => 'WellnessGoal',
       _ => null,
     };
   }
@@ -1370,41 +1540,45 @@ class Protocol extends _i1.SerializationManagerServer {
         return 'CalendarDayEntry';
       case _i7.CalendarMonth():
         return 'CalendarMonth';
-      case _i8.DailyMoodData():
+      case _i8.Contact():
+        return 'Contact';
+      case _i9.DailyMoodData():
         return 'DailyMoodData';
-      case _i9.EntryTag():
+      case _i10.EntryTag():
         return 'EntryTag';
-      case _i10.FavoriteContact():
+      case _i11.FavoriteContact():
         return 'FavoriteContact';
-      case _i11.GratitudeEntry():
+      case _i12.Goal():
+        return 'Goal';
+      case _i13.GratitudeEntry():
         return 'GratitudeEntry';
-      case _i12.Greeting():
+      case _i14.Greeting():
         return 'Greeting';
-      case _i13.Insight():
+      case _i15.Insight():
         return 'Insight';
-      case _i14.JournalEntry():
+      case _i16.JournalEntry():
         return 'JournalEntry';
-      case _i15.MoodDistribution():
+      case _i17.MoodDistribution():
         return 'MoodDistribution';
-      case _i16.MoodPattern():
+      case _i18.MoodPattern():
         return 'MoodPattern';
-      case _i17.Tag():
+      case _i19.Tag():
         return 'Tag';
-      case _i18.TimeOfDayAnalysis():
+      case _i20.TimeOfDayAnalysis():
         return 'TimeOfDayAnalysis';
-      case _i19.UserProfile():
+      case _i21.UserProfile():
         return 'UserProfile';
-      case _i20.UserSettings():
+      case _i22.UserSettings():
         return 'UserSettings';
-      case _i21.UserStats():
+      case _i23.UserStats():
         return 'UserStats';
-      case _i22.VoiceEntry():
+      case _i24.VoiceEntry():
         return 'VoiceEntry';
-      case _i23.VoiceEntryWithTags():
+      case _i25.VoiceEntryWithTags():
         return 'VoiceEntryWithTags';
-      case _i24.WeeklyAnalytics():
+      case _i26.WeeklyAnalytics():
         return 'WeeklyAnalytics';
-      case _i25.WellnessGoal():
+      case _i27.WellnessGoal():
         return 'WellnessGoal';
     }
     className = _i2.Protocol().getClassNameForObject(data);
@@ -1437,59 +1611,65 @@ class Protocol extends _i1.SerializationManagerServer {
     if (dataClassName == 'CalendarMonth') {
       return deserialize<_i7.CalendarMonth>(data['data']);
     }
+    if (dataClassName == 'Contact') {
+      return deserialize<_i8.Contact>(data['data']);
+    }
     if (dataClassName == 'DailyMoodData') {
-      return deserialize<_i8.DailyMoodData>(data['data']);
+      return deserialize<_i9.DailyMoodData>(data['data']);
     }
     if (dataClassName == 'EntryTag') {
-      return deserialize<_i9.EntryTag>(data['data']);
+      return deserialize<_i10.EntryTag>(data['data']);
     }
     if (dataClassName == 'FavoriteContact') {
-      return deserialize<_i10.FavoriteContact>(data['data']);
+      return deserialize<_i11.FavoriteContact>(data['data']);
+    }
+    if (dataClassName == 'Goal') {
+      return deserialize<_i12.Goal>(data['data']);
     }
     if (dataClassName == 'GratitudeEntry') {
-      return deserialize<_i11.GratitudeEntry>(data['data']);
+      return deserialize<_i13.GratitudeEntry>(data['data']);
     }
     if (dataClassName == 'Greeting') {
-      return deserialize<_i12.Greeting>(data['data']);
+      return deserialize<_i14.Greeting>(data['data']);
     }
     if (dataClassName == 'Insight') {
-      return deserialize<_i13.Insight>(data['data']);
+      return deserialize<_i15.Insight>(data['data']);
     }
     if (dataClassName == 'JournalEntry') {
-      return deserialize<_i14.JournalEntry>(data['data']);
+      return deserialize<_i16.JournalEntry>(data['data']);
     }
     if (dataClassName == 'MoodDistribution') {
-      return deserialize<_i15.MoodDistribution>(data['data']);
+      return deserialize<_i17.MoodDistribution>(data['data']);
     }
     if (dataClassName == 'MoodPattern') {
-      return deserialize<_i16.MoodPattern>(data['data']);
+      return deserialize<_i18.MoodPattern>(data['data']);
     }
     if (dataClassName == 'Tag') {
-      return deserialize<_i17.Tag>(data['data']);
+      return deserialize<_i19.Tag>(data['data']);
     }
     if (dataClassName == 'TimeOfDayAnalysis') {
-      return deserialize<_i18.TimeOfDayAnalysis>(data['data']);
+      return deserialize<_i20.TimeOfDayAnalysis>(data['data']);
     }
     if (dataClassName == 'UserProfile') {
-      return deserialize<_i19.UserProfile>(data['data']);
+      return deserialize<_i21.UserProfile>(data['data']);
     }
     if (dataClassName == 'UserSettings') {
-      return deserialize<_i20.UserSettings>(data['data']);
+      return deserialize<_i22.UserSettings>(data['data']);
     }
     if (dataClassName == 'UserStats') {
-      return deserialize<_i21.UserStats>(data['data']);
+      return deserialize<_i23.UserStats>(data['data']);
     }
     if (dataClassName == 'VoiceEntry') {
-      return deserialize<_i22.VoiceEntry>(data['data']);
+      return deserialize<_i24.VoiceEntry>(data['data']);
     }
     if (dataClassName == 'VoiceEntryWithTags') {
-      return deserialize<_i23.VoiceEntryWithTags>(data['data']);
+      return deserialize<_i25.VoiceEntryWithTags>(data['data']);
     }
     if (dataClassName == 'WeeklyAnalytics') {
-      return deserialize<_i24.WeeklyAnalytics>(data['data']);
+      return deserialize<_i26.WeeklyAnalytics>(data['data']);
     }
     if (dataClassName == 'WellnessGoal') {
-      return deserialize<_i25.WellnessGoal>(data['data']);
+      return deserialize<_i27.WellnessGoal>(data['data']);
     }
     if (dataClassName.startsWith('serverpod.')) {
       data['className'] = dataClassName.substring(10);
@@ -1527,28 +1707,32 @@ class Protocol extends _i1.SerializationManagerServer {
       }
     }
     switch (t) {
-      case _i9.EntryTag:
-        return _i9.EntryTag.t;
-      case _i10.FavoriteContact:
-        return _i10.FavoriteContact.t;
-      case _i11.GratitudeEntry:
-        return _i11.GratitudeEntry.t;
-      case _i13.Insight:
-        return _i13.Insight.t;
-      case _i14.JournalEntry:
-        return _i14.JournalEntry.t;
-      case _i16.MoodPattern:
-        return _i16.MoodPattern.t;
-      case _i17.Tag:
-        return _i17.Tag.t;
-      case _i19.UserProfile:
-        return _i19.UserProfile.t;
-      case _i20.UserSettings:
-        return _i20.UserSettings.t;
-      case _i22.VoiceEntry:
-        return _i22.VoiceEntry.t;
-      case _i25.WellnessGoal:
-        return _i25.WellnessGoal.t;
+      case _i8.Contact:
+        return _i8.Contact.t;
+      case _i10.EntryTag:
+        return _i10.EntryTag.t;
+      case _i11.FavoriteContact:
+        return _i11.FavoriteContact.t;
+      case _i12.Goal:
+        return _i12.Goal.t;
+      case _i13.GratitudeEntry:
+        return _i13.GratitudeEntry.t;
+      case _i15.Insight:
+        return _i15.Insight.t;
+      case _i16.JournalEntry:
+        return _i16.JournalEntry.t;
+      case _i18.MoodPattern:
+        return _i18.MoodPattern.t;
+      case _i19.Tag:
+        return _i19.Tag.t;
+      case _i21.UserProfile:
+        return _i21.UserProfile.t;
+      case _i22.UserSettings:
+        return _i22.UserSettings.t;
+      case _i24.VoiceEntry:
+        return _i24.VoiceEntry.t;
+      case _i27.WellnessGoal:
+        return _i27.WellnessGoal.t;
     }
     return null;
   }

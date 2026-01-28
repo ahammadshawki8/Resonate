@@ -34,17 +34,21 @@ dependencies:
   fl_chart: ^0.66.0
   table_calendar: ^3.0.9
   
-  # Audio Recording (disabled for now - add back when implementing actual recording)
-  # record: ^5.0.4
-  # just_audio: ^0.9.36
-  # audio_waveforms: ^1.0.5
+  # Audio Recording & Playback
+  record: ^6.1.2
+  just_audio: ^0.9.36
+  
+  # Local Notifications (without Firebase for now)
+  flutter_local_notifications: ^17.0.0
   
   # Utilities
   intl: ^0.20.2
   uuid: ^4.2.2
   shared_preferences: ^2.2.2
-  # permission_handler: ^11.1.0  # Disabled - causes Windows build issues
   path_provider: ^2.1.2
+  http: ^1.1.0
+  url_launcher: ^6.2.4
+  timezone: ^0.9.2
   
   # Icons
   iconsax: ^0.0.8

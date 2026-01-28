@@ -773,6 +773,41 @@ class _InsightEndpoint {
       }
     });
   }
+
+  _i3.Future<_i9.Insight> createInsight(
+    _i1.TestSessionBuilder sessionBuilder, {
+    required String insightText,
+    required String insightType,
+  }) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'insight',
+            method: 'createInsight',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'insight',
+          methodName: 'createInsight',
+          parameters: _i1.testObjectToJson({
+            'insightText': insightText,
+            'insightType': insightType,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i9.Insight>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
 }
 
 class _SettingsEndpoint {

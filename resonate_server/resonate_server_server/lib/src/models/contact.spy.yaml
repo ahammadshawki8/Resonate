@@ -1,0 +1,14 @@
+### Emergency or support contact.
+class: Contact
+table: contacts
+
+fields:
+  userProfileId: int?, scope=serverOnly
+  name: String
+  phone: String?
+  email: String?
+  relationship: String? # friend, family, therapist, etc.
+  emoji: String? # visual identifier
+  isPrimary: bool?, scope=serverOnly # primary emergency contact
+  createdAt: DateTime?, scope=serverOnly
+  updatedAt: DateTime?, scope=serverOnly

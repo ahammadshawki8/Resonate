@@ -20,9 +20,12 @@ class ApiService {
   static Future<void> initialize({String? serverUrl}) async {
     _serverUrl = serverUrl ?? 'http://localhost:8080/';
     
-    // Create client with FlutterConnectivityMonitor
-    _client = Client(_serverUrl)
-      ..connectivityMonitor = FlutterConnectivityMonitor();
+    // Create client with FlutterConnectivityMonitor and longer timeout
+    _client = Client(
+      _serverUrl,
+      // Increase timeout for AI processing (5 minutes)
+      connectionTimeout: const Duration(minutes: 5),
+    )..connectivityMonitor = FlutterConnectivityMonitor();
     
     // Set up the auth session manager for Serverpod 3
     _client!.authSessionManager = FlutterAuthSessionManager();

@@ -275,163 +275,176 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1a1a2e) : const Color(0xFFF5F3FF),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => _showExitDialog(),
-                    child: Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(Icons.close, color: isDark ? Colors.white70 : AppColors.textPrimary),
-                    ),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        widget.meditationType,
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+            ),
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => _showExitDialog(),
+                        child: Container(
+                          padding: EdgeInsets.all(10.w),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Icon(Icons.close, size: 20.sp, color: isDark ? Colors.white70 : AppColors.textPrimary),
                         ),
                       ),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            widget.meditationType,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 40.w),
+                    ],
+                  ),
+                ),
+                
+                // Timer
+                Padding(
+                  padding: EdgeInsets.only(top: 4.h),
+                  child: Text(
+                    _formatTime(_secondsRemaining),
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w300,
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(width: 48.w),
-                ],
-              ),
-            ),
-            
-            // Timer
-            Text(
-              _formatTime(_secondsRemaining),
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.w300,
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
-              ),
-            ),
-            
-            // Main Content
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Breathing Circle
-                    if (showBreathGuide) ...[
-                      AnimatedBuilder(
-                        animation: _breathAnimation,
-                        builder: (context, child) {
-                          return Container(
-                            width: 180.w * _breathAnimation.value,
-                            height: 180.w * _breathAnimation.value,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  widget.color.withOpacity(0.4),
-                                  widget.color.withOpacity(0.1),
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: widget.color.withOpacity(0.3),
-                                  blurRadius: 40,
-                                  spreadRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Container(
-                                width: 120.w * _breathAnimation.value,
-                                height: 120.w * _breathAnimation.value,
+                ),
+                
+                // Main Content
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Breathing Circle
+                        if (showBreathGuide) ...[
+                          AnimatedBuilder(
+                            animation: _breathAnimation,
+                            builder: (context, child) {
+                              return Container(
+                                width: 150.w * _breathAnimation.value,
+                                height: 150.w * _breathAnimation.value,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: widget.color.withOpacity(0.2),
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      widget.color.withOpacity(0.4),
+                                      widget.color.withOpacity(0.1),
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: widget.color.withOpacity(0.3),
+                                      blurRadius: 40,
+                                      spreadRadius: 10,
+                                    ),
+                                  ],
                                 ),
                                 child: Center(
-                                  child: Text(
-                                    _breathAnimation.value > 1.2 ? 'Breathe In' : 'Breathe Out',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      color: isDark ? Colors.white : widget.color,
-                                      fontWeight: FontWeight.w500,
+                                  child: Container(
+                                    width: 100.w * _breathAnimation.value,
+                                    height: 100.w * _breathAnimation.value,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: widget.color.withOpacity(0.2),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _breathAnimation.value > 1.2 ? 'Breathe In' : 'Breathe Out',
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          color: isDark ? Colors.white : widget.color,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              );
+                            },
+                          ),
+                          SizedBox(height: 32.h),
+                        ] else ...[
+                          Icon(
+                            widget.icon,
+                            size: 64.sp,
+                            color: widget.color.withOpacity(0.6),
+                          ).animate(onPlay: (c) => c.repeat(reverse: true))
+                              .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 2000.ms),
+                          SizedBox(height: 32.h),
+                        ],
+                        
+                        // Guidance Text
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 28.w),
+                          child: Text(
+                            currentPhase['text'] as String,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w300,
+                              color: isDark ? Colors.white : AppColors.textPrimary,
+                              height: 1.3,
                             ),
-                          );
-                        },
-                      ),
-                      SizedBox(height: 48.h),
-                    ] else ...[
-                      Icon(
-                        widget.icon,
-                        size: 80.sp,
-                        color: widget.color.withOpacity(0.6),
-                      ).animate(onPlay: (c) => c.repeat(reverse: true))
-                          .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 2000.ms),
-                      SizedBox(height: 48.h),
-                    ],
-                    
-                    // Guidance Text
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 48.w),
-                      child: Text(
-                        currentPhase['text'] as String,
-                        style: TextStyle(
-                          fontSize: 22.sp,
-                          fontWeight: FontWeight.w300,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                          height: 1.5,
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ).animate(key: ValueKey(_currentPhaseIndex))
+                              .fadeIn(duration: 800.ms),
                         ),
-                        textAlign: TextAlign.center,
-                      ).animate(key: ValueKey(_currentPhaseIndex))
-                          .fadeIn(duration: 800.ms),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            
-            // Controls
-            Padding(
-              padding: EdgeInsets.only(top: 32.h, bottom: 64.h),
-              child: GestureDetector(
-                onTap: _togglePause,
-                child: Container(
-                  width: 80.w,
-                  height: 80.w,
-                  decoration: BoxDecoration(
-                    color: widget.color,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.color.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                
+                // Controls
+                Padding(
+                  padding: EdgeInsets.only(top: 16.h, bottom: 24.h),
+                  child: GestureDetector(
+                    onTap: _togglePause,
+                    child: Container(
+                      width: 64.w,
+                      height: 64.w,
+                      decoration: BoxDecoration(
+                        color: widget.color,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.color.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    _isPaused ? Icons.play_arrow : Icons.pause,
-                    color: Colors.white,
-                    size: 40.sp,
+                      child: Icon(
+                        _isPaused ? Icons.play_arrow : Icons.pause,
+                        color: Colors.white,
+                        size: 32.sp,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -441,94 +454,94 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1a1a2e) : const Color(0xFFF5F3FF),
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Icon(Icons.arrow_back, size: 20.sp, color: isDark ? Colors.white70 : AppColors.textPrimary),
                       ),
-                      child: Icon(Icons.arrow_back, color: isDark ? Colors.white70 : AppColors.textPrimary),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(32.w),
+              
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 20.h),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 120.w,
-                      height: 120.w,
+                      width: 100.w,
+                      height: 100.w,
                       decoration: BoxDecoration(
                         color: widget.color.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(widget.icon, size: 60.sp, color: widget.color),
+                      child: Icon(widget.icon, size: 50.sp, color: widget.color),
                     ).animate().fadeIn(duration: 600.ms).scale(delay: 200.ms),
                     
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 24.h),
                     
                     Text(
                       widget.meditationType,
                       style: TextStyle(
-                        fontSize: 32.sp,
+                        fontSize: 28.sp,
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ).animate().fadeIn(delay: 200.ms),
                     
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 6.h),
                     
                     Text(
                       '${widget.durationMinutes} minutes',
                       style: TextStyle(
-                        fontSize: 18.sp,
+                        fontSize: 16.sp,
                         color: isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
                     ).animate().fadeIn(delay: 300.ms),
                     
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 24.h),
                     
                     Container(
-                      padding: EdgeInsets.all(24.w),
+                      padding: EdgeInsets.all(20.w),
                       decoration: BoxDecoration(
                         color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-                        borderRadius: BorderRadius.circular(20.r),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Column(
                         children: [
                           Text(
                             'Before you begin:',
                             style: TextStyle(
-                              fontSize: 16.sp,
+                              fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
                               color: isDark ? Colors.white : AppColors.textPrimary,
                             ),
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 12.h),
                           ...[
                             '🔇 Find a quiet space',
                             '🪑 Sit or lie comfortably',
                             '👁️ You may close your eyes',
                             '🌬️ Follow the breathing guide',
                           ].map((tip) => Padding(
-                            padding: EdgeInsets.symmetric(vertical: 6.h),
+                            padding: EdgeInsets.symmetric(vertical: 5.h),
                             child: Text(
                               tip,
                               style: TextStyle(
-                                fontSize: 14.sp,
+                                fontSize: 13.sp,
                                 color: isDark ? Colors.white70 : AppColors.textSecondary,
                               ),
                             ),
@@ -537,7 +550,7 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
                       ),
                     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
                     
-                    SizedBox(height: 48.h),
+                    SizedBox(height: 32.h),
                     
                     SizedBox(
                       width: double.infinity,
@@ -545,24 +558,26 @@ class _MeditationSessionScreenState extends State<MeditationSessionScreen>
                         onPressed: _startMeditation,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: widget.color,
-                          padding: EdgeInsets.symmetric(vertical: 20.h),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+                          padding: EdgeInsets.symmetric(vertical: 18.h),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                         ),
                         child: Text(
                           'Begin Meditation',
                           style: TextStyle(
-                            fontSize: 18.sp,
+                            fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
                       ),
                     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
+                    
+                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

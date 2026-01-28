@@ -1,0 +1,27 @@
+# Flask Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+python-multipart==0.0.6
+
+# Audio Processing
+librosa==0.10.1
+numpy>=1.24.0,<2.0.0
+scipy>=1.11.0
+soundfile==0.12.1
+
+# Speech-to-Text (Whisper)
+openai-whisper==20231117
+torch>=2.0.0
+torchaudio>=2.0.0
+
+# NLP & Sentiment Analysis
+textblob==0.17.1
+nltk==3.8.1
+vaderSentiment==3.3.2
+
+# LLM Integration (Groq)
+groq==0.4.2
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0

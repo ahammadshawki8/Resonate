@@ -12,13 +12,13 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod/serverpod.dart' as _i1;
 
-/// Journal entry for wellness reflection.
+/// Journal entry for reflection and thoughts.
 abstract class JournalEntry
     implements _i1.TableRow<int?>, _i1.ProtocolSerialization {
   JournalEntry._({
     this.id,
-    required this.userProfileId,
-    required this.createdAt,
+    this.userProfileId,
+    this.createdAt,
     required this.content,
     required this.prompt,
     this.moodAtTime,
@@ -26,8 +26,8 @@ abstract class JournalEntry
 
   factory JournalEntry({
     int? id,
-    required int userProfileId,
-    required DateTime createdAt,
+    int? userProfileId,
+    DateTime? createdAt,
     required String content,
     required String prompt,
     String? moodAtTime,
@@ -36,10 +36,10 @@ abstract class JournalEntry
   factory JournalEntry.fromJson(Map<String, dynamic> jsonSerialization) {
     return JournalEntry(
       id: jsonSerialization['id'] as int?,
-      userProfileId: jsonSerialization['userProfileId'] as int,
-      createdAt: _i1.DateTimeJsonExtension.fromJson(
-        jsonSerialization['createdAt'],
-      ),
+      userProfileId: jsonSerialization['userProfileId'] as int?,
+      createdAt: jsonSerialization['createdAt'] == null
+          ? null
+          : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
       content: jsonSerialization['content'] as String,
       prompt: jsonSerialization['prompt'] as String,
       moodAtTime: jsonSerialization['moodAtTime'] as String?,
@@ -53,9 +53,9 @@ abstract class JournalEntry
   @override
   int? id;
 
-  int userProfileId;
+  int? userProfileId;
 
-  DateTime createdAt;
+  DateTime? createdAt;
 
   String content;
 
@@ -82,8 +82,8 @@ abstract class JournalEntry
     return {
       '__className__': 'JournalEntry',
       if (id != null) 'id': id,
-      'userProfileId': userProfileId,
-      'createdAt': createdAt.toJson(),
+      if (userProfileId != null) 'userProfileId': userProfileId,
+      if (createdAt != null) 'createdAt': createdAt?.toJson(),
       'content': content,
       'prompt': prompt,
       if (moodAtTime != null) 'moodAtTime': moodAtTime,
@@ -95,8 +95,6 @@ abstract class JournalEntry
     return {
       '__className__': 'JournalEntry',
       if (id != null) 'id': id,
-      'userProfileId': userProfileId,
-      'createdAt': createdAt.toJson(),
       'content': content,
       'prompt': prompt,
       if (moodAtTime != null) 'moodAtTime': moodAtTime,
@@ -138,8 +136,8 @@ class _Undefined {}
 class _JournalEntryImpl extends JournalEntry {
   _JournalEntryImpl({
     int? id,
-    required int userProfileId,
-    required DateTime createdAt,
+    int? userProfileId,
+    DateTime? createdAt,
     required String content,
     required String prompt,
     String? moodAtTime,
@@ -158,16 +156,16 @@ class _JournalEntryImpl extends JournalEntry {
   @override
   JournalEntry copyWith({
     Object? id = _Undefined,
-    int? userProfileId,
-    DateTime? createdAt,
+    Object? userProfileId = _Undefined,
+    Object? createdAt = _Undefined,
     String? content,
     String? prompt,
     Object? moodAtTime = _Undefined,
   }) {
     return JournalEntry(
       id: id is int? ? id : this.id,
-      userProfileId: userProfileId ?? this.userProfileId,
-      createdAt: createdAt ?? this.createdAt,
+      userProfileId: userProfileId is int? ? userProfileId : this.userProfileId,
+      createdAt: createdAt is DateTime? ? createdAt : this.createdAt,
       content: content ?? this.content,
       prompt: prompt ?? this.prompt,
       moodAtTime: moodAtTime is String? ? moodAtTime : this.moodAtTime,
@@ -178,12 +176,12 @@ class _JournalEntryImpl extends JournalEntry {
 class JournalEntryUpdateTable extends _i1.UpdateTable<JournalEntryTable> {
   JournalEntryUpdateTable(super.table);
 
-  _i1.ColumnValue<int, int> userProfileId(int value) => _i1.ColumnValue(
+  _i1.ColumnValue<int, int> userProfileId(int? value) => _i1.ColumnValue(
     table.userProfileId,
     value,
   );
 
-  _i1.ColumnValue<DateTime, DateTime> createdAt(DateTime value) =>
+  _i1.ColumnValue<DateTime, DateTime> createdAt(DateTime? value) =>
       _i1.ColumnValue(
         table.createdAt,
         value,

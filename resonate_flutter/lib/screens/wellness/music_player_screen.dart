@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:just_audio/just_audio.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/freesound_service.dart';
 
 class MusicPlayerScreen extends StatefulWidget {
   final String category;
@@ -23,123 +25,183 @@ class MusicPlayerScreen extends StatefulWidget {
 class _MusicPlayerScreenState extends State<MusicPlayerScreen>
     with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isPlaying = true;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  final FreesoundService _freesoundService = FreesoundService.instance;
+  
+  bool _isPlaying = false;
+  bool _isLoading = true;
+  String? _errorMessage;
   int _currentTrackIndex = 0;
   double _volume = 0.7;
-  int _elapsedSeconds = 0;
-  Timer? _timer;
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
   late AnimationController _visualizerController;
   
-  late List<Map<String, dynamic>> _tracks;
+  List<FreesoundTrack> _tracks = [];
 
   @override
   void initState() {
     super.initState();
-    _tracks = _getTracksForCategory(widget.category);
-    _startTimer();
-    
     _visualizerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     )..repeat(reverse: true);
+    
+    _initAudioPlayer();
+    _loadTracks();
   }
 
-  List<Map<String, dynamic>> _getTracksForCategory(String category) {
-    switch (category) {
-      case 'Calm & Peaceful':
-        return [
-          {'title': 'Ocean Waves', 'artist': 'Nature Sounds', 'duration': 300, 'icon': Icons.waves},
-          {'title': 'Gentle Rain', 'artist': 'Ambient Collection', 'duration': 420, 'icon': Icons.water_drop},
-          {'title': 'Forest Morning', 'artist': 'Nature Sounds', 'duration': 360, 'icon': Icons.forest},
-          {'title': 'Soft Piano Dreams', 'artist': 'Relaxation Music', 'duration': 280, 'icon': Icons.piano},
-          {'title': 'Peaceful Stream', 'artist': 'Nature Sounds', 'duration': 340, 'icon': Icons.water},
-        ];
-      case 'Uplifting & Happy':
-        return [
-          {'title': 'Sunshine Melody', 'artist': 'Feel Good Tunes', 'duration': 210, 'icon': Icons.wb_sunny},
-          {'title': 'Happy Morning', 'artist': 'Positive Vibes', 'duration': 240, 'icon': Icons.mood},
-          {'title': 'Dancing Light', 'artist': 'Joy Collection', 'duration': 200, 'icon': Icons.music_note},
-          {'title': 'Cheerful Day', 'artist': 'Feel Good Tunes', 'duration': 225, 'icon': Icons.celebration},
-          {'title': 'Smile', 'artist': 'Positive Vibes', 'duration': 195, 'icon': Icons.sentiment_satisfied_alt},
-        ];
-      case 'Meditation & Focus':
-        return [
-          {'title': 'Deep Focus', 'artist': 'Concentration Music', 'duration': 600, 'icon': Icons.psychology},
-          {'title': 'Binaural Beats 40Hz', 'artist': 'Brain Waves', 'duration': 900, 'icon': Icons.graphic_eq},
-          {'title': 'Zen Garden', 'artist': 'Meditation Music', 'duration': 480, 'icon': Icons.spa},
-          {'title': 'Lo-Fi Study', 'artist': 'Focus Beats', 'duration': 720, 'icon': Icons.headphones},
-          {'title': 'Tibetan Bowls', 'artist': 'Meditation Music', 'duration': 540, 'icon': Icons.self_improvement},
-        ];
-      case 'Energizing':
-        return [
-          {'title': 'Power Up', 'artist': 'Workout Beats', 'duration': 180, 'icon': Icons.flash_on},
-          {'title': 'Unstoppable', 'artist': 'Motivation Mix', 'duration': 195, 'icon': Icons.fitness_center},
-          {'title': 'Rise & Grind', 'artist': 'Energy Boost', 'duration': 210, 'icon': Icons.trending_up},
-          {'title': 'Champion', 'artist': 'Workout Beats', 'duration': 200, 'icon': Icons.emoji_events},
-          {'title': 'Full Speed', 'artist': 'Motivation Mix', 'duration': 185, 'icon': Icons.speed},
-        ];
-      default:
-        return [
-          {'title': 'Ambient Soundscape', 'artist': 'Various', 'duration': 300, 'icon': Icons.music_note},
-          {'title': 'Peaceful Moments', 'artist': 'Relaxation', 'duration': 360, 'icon': Icons.spa},
-        ];
-    }
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_isPlaying) {
+  void _initAudioPlayer() {
+    _audioPlayer.setVolume(_volume);
+    
+    _audioPlayer.positionStream.listen((position) {
+      if (mounted) {
         setState(() {
-          _elapsedSeconds++;
-          if (_elapsedSeconds >= (_tracks[_currentTrackIndex]['duration'] as int)) {
-            _nextTrack();
-          }
+          _position = position;
         });
       }
     });
-  }
-
-  void _togglePlayPause() {
-    setState(() {
-      _isPlaying = !_isPlaying;
+    
+    _audioPlayer.durationStream.listen((duration) {
+      if (mounted && duration != null) {
+        setState(() {
+          _duration = duration;
+        });
+      }
     });
-  }
-
-  void _nextTrack() {
-    setState(() {
-      _currentTrackIndex = (_currentTrackIndex + 1) % _tracks.length;
-      _elapsedSeconds = 0;
-    });
-  }
-
-  void _previousTrack() {
-    setState(() {
-      if (_elapsedSeconds > 3) {
-        _elapsedSeconds = 0;
-      } else {
-        _currentTrackIndex = (_currentTrackIndex - 1 + _tracks.length) % _tracks.length;
-        _elapsedSeconds = 0;
+    
+    _audioPlayer.playerStateStream.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state.playing;
+        });
+        
+        if (state.processingState == ProcessingState.completed) {
+          _nextTrack();
+        }
       }
     });
   }
 
-  void _selectTrack(int index) {
+  Future<void> _loadTracks() async {
     setState(() {
-      _currentTrackIndex = index;
-      _elapsedSeconds = 0;
-      _isPlaying = true;
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      final allTracks = await _freesoundService.getCuratedTracks();
+      final categoryTracks = allTracks[widget.category] ?? [];
+      
+      if (categoryTracks.isEmpty) {
+        setState(() {
+          _errorMessage = 'No tracks found for this category';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _tracks = categoryTracks;
+        _isLoading = false;
+      });
+
+      if (_tracks.isNotEmpty) {
+        await _playTrack(0);
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load tracks: $e';
+        _isLoading = false;
+      });
+    }
   }
 
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString()}:${secs.toString().padLeft(2, '0')}';
+  Future<void> _playTrack(int index) async {
+    if (index < 0 || index >= _tracks.length) return;
+
+    try {
+      setState(() {
+        _currentTrackIndex = index;
+      });
+
+      final track = _tracks[index];
+      final url = track.previewHqUrl ?? track.previewUrl;
+      
+      await _audioPlayer.setUrl(url);
+      await _audioPlayer.play();
+    } catch (e) {
+      print('Error playing track: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to play track: $e')),
+      );
+    }
+  }
+
+  IconData _getIconForCategory(String category) {
+    switch (category) {
+      case 'Calm & Peaceful':
+        return Icons.waves;
+      case 'Uplifting & Happy':
+        return Icons.wb_sunny;
+      case 'Meditation & Focus':
+        return Icons.self_improvement;
+      case 'Energizing':
+        return Icons.flash_on;
+      case 'Sleep & Relaxation':
+        return Icons.nightlight;
+      default:
+        return Icons.music_note;
+    }
+  }
+
+  Future<void> _togglePlayPause() async {
+    if (_isPlaying) {
+      await _audioPlayer.pause();
+    } else {
+      await _audioPlayer.play();
+    }
+  }
+
+  Future<void> _nextTrack() async {
+    final nextIndex = (_currentTrackIndex + 1) % _tracks.length;
+    await _playTrack(nextIndex);
+  }
+
+  Future<void> _previousTrack() async {
+    if (_position.inSeconds > 3) {
+      await _audioPlayer.seek(Duration.zero);
+    } else {
+      final prevIndex = (_currentTrackIndex - 1 + _tracks.length) % _tracks.length;
+      await _playTrack(prevIndex);
+    }
+  }
+
+  Future<void> _selectTrack(int index) async {
+    await _playTrack(index);
+  }
+
+  Future<void> _seekTo(double value) async {
+    final position = Duration(seconds: (value * _duration.inSeconds).toInt());
+    await _audioPlayer.seek(position);
+  }
+
+  Future<void> _setVolume(double value) async {
+    setState(() {
+      _volume = value;
+    });
+    await _audioPlayer.setVolume(value);
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString()}:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _audioPlayer.dispose();
     _visualizerController.dispose();
     super.dispose();
   }
@@ -147,9 +209,86 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0f0f1a) : widget.color.withOpacity(0.05),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: widget.color),
+              SizedBox(height: 16.h),
+              Text(
+                'Loading tracks...',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0f0f1a) : widget.color.withOpacity(0.05),
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+                SizedBox(height: 16.h),
+                Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24.h),
+                ElevatedButton(
+                  onPressed: _loadTracks,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.color,
+                    padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 16.h),
+                  ),
+                  child: Text('Retry', style: TextStyle(fontSize: 16.sp)),
+                ),
+                SizedBox(height: 16.h),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Go Back', style: TextStyle(fontSize: 14.sp, color: widget.color)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_tracks.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0f0f1a) : widget.color.withOpacity(0.05),
+        body: Center(
+          child: Text(
+            'No tracks available',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
     final currentTrack = _tracks[_currentTrackIndex];
-    final trackDuration = currentTrack['duration'] as int;
-    final progress = _elapsedSeconds / trackDuration;
+    final progress = _duration.inSeconds > 0 ? _position.inSeconds / _duration.inSeconds : 0.0;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -282,7 +421,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
                             ),
                             SizedBox(height: 8.h),
                             Icon(
-                              currentTrack['icon'] as IconData,
+                              _getIconForCategory(widget.category),
                               color: Colors.white,
                               size: 32.sp,
                             ),
@@ -333,20 +472,31 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
               child: Column(
                 children: [
                   Text(
-                    currentTrack['title'] as String,
+                    currentTrack.displayName,
                     style: TextStyle(
-                      fontSize: 24.sp,
+                      fontSize: 22.sp,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                     textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    currentTrack['artist'] as String,
+                    'by ${currentTrack.artist}',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 14.sp,
                       color: isDark ? Colors.white60 : AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    'via Freesound.org',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: isDark ? Colors.white38 : AppColors.textSecondary.withOpacity(0.6),
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],
@@ -368,11 +518,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
                     ),
                     child: Slider(
                       value: progress.clamp(0.0, 1.0),
-                      onChanged: (value) {
-                        setState(() {
-                          _elapsedSeconds = (value * trackDuration).toInt();
-                        });
-                      },
+                      onChanged: (value) => _seekTo(value),
                       activeColor: widget.color,
                       inactiveColor: widget.color.withOpacity(0.2),
                     ),
@@ -383,14 +529,14 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _formatTime(_elapsedSeconds),
+                          _formatDuration(_position),
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: isDark ? Colors.white60 : AppColors.textSecondary,
                           ),
                         ),
                         Text(
-                          _formatTime(trackDuration),
+                          _formatDuration(_duration),
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: isDark ? Colors.white60 : AppColors.textSecondary,
@@ -491,11 +637,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
                       ),
                       child: Slider(
                         value: _volume,
-                        onChanged: (value) {
-                          setState(() {
-                            _volume = value;
-                          });
-                        },
+                        onChanged: (value) => _setVolume(value),
                         activeColor: widget.color,
                         inactiveColor: widget.color.withOpacity(0.2),
                       ),
@@ -583,36 +725,40 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Icon(
-                          track['icon'] as IconData,
+                          _getIconForCategory(widget.category),
                           color: isCurrentTrack ? Colors.white : widget.color,
                           size: 22.sp,
                         ),
                       ),
                       title: Text(
-                        track['title'] as String,
+                        track.displayName,
                         style: TextStyle(
-                          fontSize: 15.sp,
+                          fontSize: 14.sp,
                           fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.normal,
                           color: isCurrentTrack 
                               ? widget.color 
                               : (isDark ? Colors.white : AppColors.textPrimary),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
-                        track['artist'] as String,
+                        track.artist,
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 12.sp,
                           color: isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       trailing: isCurrentTrack && _isPlaying
                           ? Icon(Icons.equalizer, color: widget.color, size: 22.sp)
                               .animate(onPlay: (c) => c.repeat())
                               .shimmer(duration: 1000.ms, color: widget.color)
                           : Text(
-                              _formatTime(track['duration'] as int),
+                              _formatDuration(Duration(seconds: track.durationSeconds)),
                               style: TextStyle(
-                                fontSize: 13.sp,
+                                fontSize: 12.sp,
                                 color: isDark ? Colors.white38 : AppColors.textSecondary,
                               ),
                             ),

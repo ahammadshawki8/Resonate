@@ -336,6 +336,19 @@ class EndpointInsight extends _i2.EndpointRef {
         'generateInsight',
         {},
       );
+
+  /// Create a custom insight (e.g., from AI generation).
+  _i3.Future<_i9.Insight> createInsight({
+    required String insightText,
+    required String insightType,
+  }) => caller.callServerEndpoint<_i9.Insight>(
+    'insight',
+    'createInsight',
+    {
+      'insightText': insightText,
+      'insightType': insightType,
+    },
+  );
 }
 
 /// Endpoint for user settings operations.
@@ -483,7 +496,7 @@ class EndpointVoiceEntry extends _i2.EndpointRef {
   String get name => 'voiceEntry';
 
   /// Upload and analyze a voice recording.
-  /// Generates mock analysis until Flask is integrated.
+  /// Calls Python AI service for real analysis.
   _i3.Future<_i14.VoiceEntryWithTags> uploadAndAnalyze(
     _i15.ByteData audioData,
     String language,

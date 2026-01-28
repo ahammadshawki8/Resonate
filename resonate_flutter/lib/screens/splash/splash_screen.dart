@@ -23,8 +23,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(milliseconds: 2500));
     if (mounted) {
+      // Check auth status first
+      await ref.read(authProvider.notifier).checkAuthStatus();
+      
       final hasSeenOnboarding = ref.read(hasSeenOnboardingProvider);
       final authState = ref.read(authProvider);
+      
+      // If authenticated, fetch user data
+      if (authState.status == AuthStatus.authenticated) {
+        // Fetch settings, entries, and insights in parallel
+        await Future.wait([
+          ref.read(settingsProvider.notifier).fetchSettings(),
+          ref.read(entriesProvider.notifier).fetchEntries(),
+          ref.read(insightsProvider.notifier).fetchInsights(),
+        ]);
+      }
       
       if (!hasSeenOnboarding) {
         context.go('/onboarding');

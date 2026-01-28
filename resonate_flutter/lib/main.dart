@@ -1,9 +1,12 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
+import 'core/services/notification_service.dart';
 import 'navigation/app_router.dart';
 import 'providers/app_providers.dart';
 
@@ -17,14 +20,21 @@ bool useBackend = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize notification service
+  await NotificationService().initialize();
+  await NotificationService().requestPermissions();
+
   // Try to initialize the Serverpod API service
   // Falls back to demo mode if server is not available
   try {
-    await ApiService.initialize(
-      serverUrl: 'http://localhost:8080/',
-    );
+    // Use PC's IP address for Android devices, localhost for web/desktop
+    final serverUrl = kIsWeb || Platform.isWindows
+        ? 'http://localhost:8080/'
+        : 'http://10.39.84.77:8080/'; // Your PC's IP address
+    
+    await ApiService.initialize(serverUrl: serverUrl);
     useBackend = true;
-    debugPrint('✓ Connected to Serverpod backend');
+    debugPrint('✓ Connected to Serverpod backend at $serverUrl');
   } catch (e) {
     useBackend = false;
     debugPrint('⚠ Backend not available, using demo mode: $e');

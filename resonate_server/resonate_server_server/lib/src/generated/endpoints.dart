@@ -405,6 +405,31 @@ class Endpoints extends _i1.EndpointDispatch {
               ) async => (endpoints['insight'] as _i5.InsightEndpoint)
                   .generateInsight(session),
         ),
+        'createInsight': _i1.MethodConnector(
+          name: 'createInsight',
+          params: {
+            'insightText': _i1.ParameterDescription(
+              name: 'insightText',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+            'insightType': _i1.ParameterDescription(
+              name: 'insightType',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['insight'] as _i5.InsightEndpoint).createInsight(
+                    session,
+                    insightText: params['insightText'],
+                    insightType: params['insightType'],
+                  ),
+        ),
       },
     );
     connectors['settings'] = _i1.EndpointConnector(

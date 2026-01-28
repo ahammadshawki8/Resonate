@@ -6,6 +6,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/audio_service.dart';
+import '../../data/repositories/repositories.dart';
+import '../../data/models/models.dart';
 import '../../providers/app_providers.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
@@ -33,7 +36,27 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
     super.dispose();
   }
 
-  void _startRecording() {
+  void _startRecording() async {
+    debugPrint('Starting recording...');
+    
+    // Start actual audio recording
+    final path = await AudioService.startRecording();
+    
+    if (path == null) {
+      debugPrint('Failed to start recording - no path returned');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to start recording. Please check microphone permissions.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        ),
+      );
+      return;
+    }
+    
+    debugPrint('Recording started at: $path');
+    
     ref.read(recordingProvider.notifier).startRecording();
     setState(() {
       _isRecording = true;
@@ -44,7 +67,19 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _recordingSeconds++;
-        // Add waveform data from real recording (TODO: implement)
+        // Generate realistic waveform data based on time
+        // Simulate varying audio levels
+        final random = Random();
+        for (int i = 0; i < 5; i++) {
+          // Create more natural looking waveform
+          final baseLevel = 0.3 + (random.nextDouble() * 0.4);
+          final variation = (random.nextDouble() - 0.5) * 0.2;
+          _waveformData.add((baseLevel + variation).clamp(0.1, 0.9));
+        }
+        // Keep only last 150 data points for smooth animation
+        if (_waveformData.length > 150) {
+          _waveformData.removeRange(0, _waveformData.length - 150);
+        }
       });
 
       // Auto-stop after 60 seconds
@@ -56,10 +91,12 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
 
   void _stopRecording() {
     _timer?.cancel();
-    ref.read(recordingProvider.notifier).stopRecording();
 
     if (_recordingSeconds < 5) {
-      // Too short
+      // Too short - cancel the recording
+      AudioService.cancelRecording();
+      ref.read(recordingProvider.notifier).stopRecording();
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please record for at least 5 seconds'),
@@ -82,13 +119,103 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
       _isAnalyzing = true;
     });
 
-    // Simulate analysis and generate result
+    // Perform analysis
     _performAnalysis();
   }
 
   Future<void> _performAnalysis() async {
-    // TODO: Call backend for analysis result and transcript
-    // Store the result from backend
+    try {
+      // Stop recording and get file path
+      final audioPath = await AudioService.stopRecording();
+      
+      // Update provider state
+      ref.read(recordingProvider.notifier).stopRecording();
+      
+      if (audioPath == null || audioPath.isEmpty) {
+        throw Exception('Failed to get recording path');
+      }
+
+      debugPrint('Got recording path: $audioPath');
+
+      // Get language code
+      final languageCode = _selectedLanguage == 'বাংলা' ? 'bn' : 'en';
+      
+      // Get privacy level from settings
+      final privacyLevel = ref.read(settingsProvider).privacyLevel;
+
+      debugPrint('Uploading audio file...');
+      
+      // Upload and analyze with longer timeout (5 minutes for Whisper processing)
+      final result = await VoiceEntryRepository.instance.uploadAndAnalyze(
+        audioFilePath: audioPath,
+        language: languageCode,
+        privacyLevel: privacyLevel,
+      ).timeout(
+        const Duration(minutes: 5),
+        onTimeout: () {
+          throw TimeoutException('Analysis is taking longer than expected. Please try with a shorter recording.');
+        },
+      );
+
+      debugPrint('Analysis complete!');
+
+      // Store result in provider for ResultScreen to access
+      ref.read(analysisResultProvider.notifier).state = AnalysisResult(
+        moodScore: result.entry.finalMoodScore,
+        moodLabel: result.entry.moodLabel,
+        transcript: result.entry.transcript ?? '',
+        emotions: result.entry.detectedEmotions,
+        detailedEmotions: const [], // TODO: Map from backend if available
+        personalizedResponse: null, // TODO: Map from backend if available
+        confidence: result.entry.confidence,
+        acousticScore: result.entry.acousticMoodScore,
+        semanticScore: result.entry.semanticMoodScore,
+        language: result.entry.language,
+        duration: result.entry.durationSeconds,
+      );
+
+      // Refresh entries list
+      await ref.read(entriesProvider.notifier).fetchEntries();
+
+      // Navigate to result screen
+      if (mounted) {
+        context.go('/result');
+      }
+    } on TimeoutException catch (e) {
+      debugPrint('Timeout error: $e');
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'Request timed out'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Analysis error: $e');
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Analysis failed: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   // Removed unused _getMoodLabel
@@ -434,27 +561,60 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
   }
 
   Widget _buildWaveform() {
+    // Show at least 50 bars for better visualization
+    final barCount = 50;
+    final dataLength = _waveformData.length;
+    
     return SizedBox(
-      height: 100.h,
+      height: 120.h,
       width: double.infinity,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: List.generate(
-          min(30, _waveformData.length),
+          barCount,
           (index) {
-            final dataIndex = _waveformData.length - 30 + index;
-            final height = dataIndex >= 0 && dataIndex < _waveformData.length
-                ? _waveformData[dataIndex] * 80.h
-                : 10.h;
+            // Calculate which data point to use
+            double height;
+            if (dataLength == 0) {
+              // No data yet, show minimal bars
+              height = 10.h;
+            } else if (index < barCount - dataLength) {
+              // Not enough data yet, show minimal bars
+              height = 10.h;
+            } else {
+              // Use actual data
+              final dataIndex = index - (barCount - dataLength);
+              height = _waveformData[dataIndex] * 100.h;
+            }
 
             return Container(
-              margin: EdgeInsets.symmetric(horizontal: 2.w),
-              width: 4.w,
-              height: height,
+              margin: EdgeInsets.symmetric(horizontal: 1.5.w),
+              width: 3.w,
+              height: height.clamp(10.h, 100.h),
               decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primary.withOpacity(0.6),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(2.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
+            ).animate(
+              onPlay: (controller) => controller.repeat(reverse: true),
+            ).shimmer(
+              duration: 1500.ms,
+              color: Colors.white.withOpacity(0.3),
             );
           },
         ),

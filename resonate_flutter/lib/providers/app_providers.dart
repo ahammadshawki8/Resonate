@@ -1,4 +1,5 @@
 import '../core/services/auth_service.dart';
+import '../core/services/notification_service.dart';
 import '../data/repositories/repositories.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -125,7 +126,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
   }
-
   void logout() async {
     await AuthService.instance.signOut();
     state = const AuthState(status: AuthStatus.unauthenticated);
@@ -152,13 +152,20 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
 
 /// Voice Entries State
 class EntriesNotifier extends StateNotifier<List<VoiceEntry>> {
-  EntriesNotifier() : super([]) {
-    fetchEntries();
-  }
+  EntriesNotifier(this.ref) : super([]);
+  
+  final Ref ref;
 
   Future<void> fetchEntries() async {
-    final entries = await VoiceEntryRepository.instance.getEntries();
-    state = entries.map((e) => e.toVoiceEntry()).toList();
+    // Only fetch if authenticated
+    if (!ref.read(isAuthenticatedProvider)) return;
+    
+    try {
+      final entries = await VoiceEntryRepository.instance.getEntries();
+      state = entries.map((e) => e.toVoiceEntry()).toList();
+    } catch (e) {
+      // Handle error silently - user might not be authenticated
+    }
   }
 
   void addEntry(VoiceEntry entry) {
@@ -240,18 +247,25 @@ class EntriesNotifier extends StateNotifier<List<VoiceEntry>> {
 
 final entriesProvider =
     StateNotifierProvider<EntriesNotifier, List<VoiceEntry>>((ref) {
-  return EntriesNotifier();
+  return EntriesNotifier(ref);
 });
 
 /// Insights State
 class InsightsNotifier extends StateNotifier<List<Insight>> {
-  InsightsNotifier() : super([]) {
-    fetchInsights();
-  }
+  InsightsNotifier(this.ref) : super([]);
+  
+  final Ref ref;
 
   Future<void> fetchInsights() async {
-    final insights = await InsightRepository.instance.getInsights();
-    state = insights.map((i) => i.toInsight()).toList();
+    // Only fetch if authenticated
+    if (!ref.read(isAuthenticatedProvider)) return;
+    
+    try {
+      final insights = await InsightRepository.instance.getInsights();
+      state = insights.map((i) => i.toInsight()).toList();
+    } catch (e) {
+      // Handle error silently - user might not be authenticated
+    }
   }
 
   void markAsRead(String id) {
@@ -263,8 +277,22 @@ class InsightsNotifier extends StateNotifier<List<Insight>> {
     state = state.map((i) => i.copyWith(isRead: true)).toList();
   }
 
-  void addInsight(Insight insight) {
+  Future<void> addInsight(Insight insight) async {
+    // Add to local state immediately
     state = [insight, ...state];
+    
+    // Save to database if authenticated
+    if (ref.read(isAuthenticatedProvider)) {
+      try {
+        await InsightRepository.instance.createInsight(
+          insightText: insight.insightText,
+          insightType: insight.insightType,
+        );
+      } catch (e) {
+        // If save fails, keep in local state anyway
+        debugPrint('Failed to save insight to database: $e');
+      }
+    }
   }
 
   void clearAll() {
@@ -276,30 +304,69 @@ class InsightsNotifier extends StateNotifier<List<Insight>> {
 
 final insightsProvider =
     StateNotifierProvider<InsightsNotifier, List<Insight>>((ref) {
-  return InsightsNotifier();
+  return InsightsNotifier(ref);
 });
 
 /// User Settings State
 class SettingsNotifier extends StateNotifier<UserSettings> {
-  SettingsNotifier() : super(UserSettingsEmpty.empty()) {
-    fetchSettings();
-  }
+  SettingsNotifier(this.ref) : super(UserSettingsEmpty.empty());
+  
+  final Ref ref;
 
   Future<void> fetchSettings() async {
-    final settings = await SettingsRepository.instance.getSettings();
-    state = settings.toUserSettings();
+    // Only fetch if authenticated
+    if (!ref.read(isAuthenticatedProvider)) return;
+    
+    try {
+      final settings = await SettingsRepository.instance.getSettings();
+      state = settings.toUserSettings();
+    } catch (e) {
+      // User not authenticated yet, keep default settings
+      // Settings will be fetched after successful login
+    }
   }
 
   void updateReminderTime(TimeOfDay time) {
     state = state.copyWith(reminderTime: time);
   }
 
-  void setReminderTime(TimeOfDay time) {
+  Future<void> setReminderTime(TimeOfDay time) async {
     state = state.copyWith(reminderTime: time);
+    
+    // If reminders are enabled, reschedule with new time
+    if (state.reminderEnabled) {
+      await _scheduleReminder(time);
+    }
   }
 
-  void toggleReminders(bool enabled) {
+  Future<void> toggleReminders(bool enabled) async {
     state = state.copyWith(reminderEnabled: enabled);
+    
+    if (enabled) {
+      // Schedule reminder
+      await _scheduleReminder(state.reminderTime);
+    } else {
+      // Cancel reminder
+      await NotificationService().cancelDailyReminder();
+    }
+  }
+
+  Future<void> _scheduleReminder(TimeOfDay time) async {
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    
+    // Request permissions if not granted
+    final granted = await notificationService.requestPermissions();
+    if (!granted) {
+      // Show error or disable reminders
+      state = state.copyWith(reminderEnabled: false);
+      return;
+    }
+    
+    await notificationService.scheduleDailyReminder(
+      hour: time.hour,
+      minute: time.minute,
+    );
   }
 
   void toggleDarkMode(bool enabled) {
@@ -321,7 +388,7 @@ class SettingsNotifier extends StateNotifier<UserSettings> {
 
 final settingsProvider =
     StateNotifierProvider<SettingsNotifier, UserSettings>((ref) {
-  return SettingsNotifier();
+  return SettingsNotifier(ref);
 });
 
 /// Tags State

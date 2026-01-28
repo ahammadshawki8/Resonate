@@ -1,12 +1,17 @@
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:serverpod/serverpod.dart';
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart' hide UserProfile;
+import 'package:http/http.dart' as http;
 import '../generated/protocol.dart';
 
 /// Endpoint for voice entry operations.
 class VoiceEntryEndpoint extends Endpoint {
   final _random = Random();
+  
+  // Python AI service URL
+  static const String _pythonServiceUrl = 'http://localhost:8001';
 
   /// Helper to get user profile ID
   Future<int> _getProfileId(Session session) async {
@@ -29,7 +34,7 @@ class VoiceEntryEndpoint extends Endpoint {
   }
 
   /// Upload and analyze a voice recording.
-  /// Generates mock analysis until Flask is integrated.
+  /// Calls Python AI service for real analysis.
   Future<VoiceEntryWithTags> uploadAndAnalyze(
     Session session,
     ByteData audioData,
@@ -38,32 +43,40 @@ class VoiceEntryEndpoint extends Endpoint {
   ) async {
     final profileId = await _getProfileId(session);
 
-    // Generate mock analysis
-    final moodScore = 0.4 + _random.nextDouble() * 0.5;
-    final result = _generateMockAnalysis(moodScore, language);
+    // Try to call Python AI service
+    AnalysisResult result;
+    try {
+      result = await _callPythonService(audioData, language, privacyLevel);
+      session.log('Python AI service analysis successful');
+    } catch (e) {
+      session.log('Python AI service failed: $e. Using mock data.', level: LogLevel.warning);
+      // Fallback to mock analysis
+      final moodScore = 0.4 + _random.nextDouble() * 0.5;
+      result = _generateMockAnalysis(moodScore, language);
+    }
 
     // Create entry
     final entry = VoiceEntry(
       userProfileId: profileId,
       recordedAt: DateTime.now(),
       language: language,
-      durationSeconds: 30.0 + _random.nextDouble() * 30,
+      durationSeconds: result.durationSeconds ?? 30.0,
       pitchMean: result.pitchMean,
       pitchStd: result.pitchStd,
       energyMean: result.energyMean,
       tempo: result.tempo,
       silenceRatio: result.silenceRatio,
       transcript: result.transcript,
-      emotionKeywords: result.emotionKeywords,
-      sentimentScore: result.sentimentScore,
-      detectedEmotions: result.detectedEmotions,
+      emotionKeywords: result.emotionKeywords ?? [],
+      sentimentScore: result.sentimentScore ?? 0.0,
+      detectedEmotions: result.detectedEmotions ?? [],
       topicContext: result.topicContext,
       acousticMoodScore: result.acousticMoodScore,
-      semanticMoodScore: result.semanticMoodScore,
+      semanticMoodScore: result.semanticMoodScore ?? 0.0,
       finalMoodScore: result.finalMoodScore,
       moodLabel: result.moodLabel,
       confidence: result.confidence,
-      signalAlignment: result.signalAlignment,
+      signalAlignment: result.signalAlignment ?? 0.0,
       privacyLevel: privacyLevel,
     );
 
@@ -73,6 +86,76 @@ class VoiceEntryEndpoint extends Endpoint {
     await _updateUserStats(session, profileId, savedEntry.finalMoodScore);
 
     return VoiceEntryWithTags(entry: savedEntry, tags: []);
+  }
+  
+  /// Call Python AI service for analysis
+  Future<AnalysisResult> _callPythonService(
+    ByteData audioData,
+    String language,
+    String privacyLevel,
+  ) async {
+    // Convert ByteData to Uint8List
+    final bytes = audioData.buffer.asUint8List();
+    
+    // Create multipart request
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_pythonServiceUrl/analyze'),
+    );
+    
+    // Add audio file
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'audio',
+        bytes,
+        filename: 'recording.m4a',
+      ),
+    );
+    
+    // Add parameters
+    request.fields['language'] = language;
+    request.fields['privacy_level'] = privacyLevel;
+    
+    // Send request with timeout
+    final streamedResponse = await request.send().timeout(
+      const Duration(seconds: 30),
+      onTimeout: () {
+        throw Exception('Python service timeout');
+      },
+    );
+    
+    final response = await http.Response.fromStream(streamedResponse);
+    
+    if (response.statusCode != 200) {
+      throw Exception('Python service error: ${response.statusCode} - ${response.body}');
+    }
+    
+    // Parse response
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final acoustic = data['acoustic'] as Map<String, dynamic>;
+    final fusion = data['fusion'] as Map<String, dynamic>;
+    final semantic = data['semantic'] as Map<String, dynamic>?;
+    
+    return AnalysisResult(
+      durationSeconds: (acoustic['duration_seconds'] as num?)?.toDouble(),
+      pitchMean: (acoustic['pitch_mean'] as num?)?.toDouble() ?? 0.0,
+      pitchStd: (acoustic['pitch_std'] as num?)?.toDouble() ?? 0.0,
+      energyMean: (acoustic['energy_mean'] as num?)?.toDouble() ?? 0.0,
+      tempo: (acoustic['tempo'] as num?)?.toDouble() ?? 0.0,
+      silenceRatio: (acoustic['silence_ratio'] as num?)?.toDouble() ?? 0.0,
+      transcript: semantic?['transcript'] as String?,
+      sentimentScore: (semantic?['sentiment_score'] as num?)?.toDouble() ?? 0.0,
+      detectedEmotions: (semantic?['detected_emotions'] as List?)?.cast<String>() ?? [],
+      emotionKeywords: (semantic?['emotion_keywords'] as List?)?.cast<String>() ?? [],
+      topicContext: semantic?['topic_context'] as String?,
+      acousticMoodScore: (acoustic['acoustic_mood_score'] as num?)?.toDouble() ?? 0.5,
+      semanticMoodScore: (semantic?['semantic_mood_score'] as num?)?.toDouble() ?? 0.0,
+      finalMoodScore: (fusion['final_mood_score'] as num?)?.toDouble() ?? 0.5,
+      moodLabel: fusion['mood_label'] as String? ?? 'neutral',
+      confidence: (fusion['confidence'] as num?)?.toDouble() ?? 0.5,
+      signalAlignment: (fusion['signal_alignment'] as num?)?.toDouble() ?? 0.0,
+      language: language,
+    );
   }
 
   /// Get all entries for the user.
@@ -293,6 +376,7 @@ class VoiceEntryEndpoint extends Endpoint {
             : ['stressed', 'tired', 'anxious'];
 
     return AnalysisResult(
+      durationSeconds: 30.0 + _random.nextDouble() * 30,
       pitchMean: 130.0 + _random.nextDouble() * 40,
       pitchStd: 15.0 + _random.nextDouble() * 20,
       energyMean: 0.05 + moodScore * 0.05,

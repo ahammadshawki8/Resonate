@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/shared_widgets.dart';
 import '../../providers/app_providers.dart';
+import '../../data/repositories/repositories.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -65,19 +66,162 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     
     setState(() => _isLoading = true);
     
-    final success = await ref.read(authProvider.notifier).signup(
+    // Step 1: Start registration (sends verification code)
+    final result = await ref.read(authProvider.notifier).signup(
       _emailController.text,
       _passwordController.text,
     );
     
     if (mounted) {
       setState(() => _isLoading = false);
-      if (success) {
+      
+      // Check if we need verification
+      final authState = ref.read(authProvider);
+      if (authState.error != null && authState.error!.contains('Verification code sent')) {
+        // Show verification dialog
+        _showVerificationDialog();
+      } else if (result) {
+        // Registration complete (shouldn't happen with email verification)
         context.go('/home');
       } else {
-        _showError('Signup failed. Please try again.');
+        // Show error
+        _showError(authState.error ?? 'Signup failed. Please try again.');
       }
     }
+  }
+
+  Future<void> _showVerificationDialog() async {
+    final codeController = TextEditingController();
+    
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        title: Text(
+          'Verify Your Email',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'We sent a verification code to:',
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              _emailController.text,
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'Check your Serverpod terminal for the code',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: AppColors.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: codeController,
+              keyboardType: TextInputType.number,
+              maxLength: 8,
+              style: TextStyle(fontSize: 18.sp, letterSpacing: 2),
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                hintText: 'Enter code',
+                counterText: '',
+                filled: true,
+                fillColor: AppColors.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: AppColors.primary, width: 2),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (codeController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Please enter the verification code')),
+                );
+                return;
+              }
+              Navigator.pop(context, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: Text('Verify'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result == true && codeController.text.isNotEmpty) {
+      // Step 2: Verify code and complete registration
+      setState(() => _isLoading = true);
+      
+      final success = await ref.read(authProvider.notifier).signup(
+        _emailController.text,
+        _passwordController.text,
+        verificationCode: codeController.text,
+      );
+      
+      if (mounted) {
+        setState(() => _isLoading = false);
+        
+        if (success) {
+          // Update profile with the user's name
+          try {
+            await UserProfileRepository.instance.updateProfile(
+              displayName: _nameController.text,
+            );
+          } catch (e) {
+            // Profile update failed, but user is still logged in
+            debugPrint('Failed to update profile name: $e');
+          }
+          
+          // Fetch user data after successful signup
+          await Future.wait([
+            ref.read(settingsProvider.notifier).fetchSettings(),
+            ref.read(entriesProvider.notifier).fetchEntries(),
+            ref.read(insightsProvider.notifier).fetchInsights(),
+          ]);
+          
+          context.go('/home');
+        } else {
+          final authState = ref.read(authProvider);
+          _showError(authState.error ?? 'Verification failed. Please try again.');
+        }
+      }
+    }
+    
+    codeController.dispose();
   }
 
   @override

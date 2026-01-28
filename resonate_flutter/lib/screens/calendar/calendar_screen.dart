@@ -73,9 +73,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               focusedDay: _focusedDay,
               selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
               calendarFormat: _calendarFormat,
+              daysOfWeekHeight: 40.h, // Add explicit height for day names
               daysOfWeekStyle: DaysOfWeekStyle(
-                weekdayStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
-                weekendStyle: TextStyle(color: isDark ? AppColors.textTertiaryDark : AppColors.textLight),
+                weekdayStyle: TextStyle(
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+                weekendStyle: TextStyle(
+                  color: isDark ? AppColors.textTertiaryDark : AppColors.textLight,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               onFormatChanged: (format) {
                 setState(() => _calendarFormat = format);

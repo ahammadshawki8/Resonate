@@ -1,0 +1,14 @@
+### Personal goal tracking.
+class: Goal
+table: goals
+
+fields:
+  userProfileId: int?, scope=serverOnly
+  title: String
+  description: String?
+  category: String? # health, career, relationships, personal, etc.
+  targetDate: DateTime?
+  isCompleted: bool?, scope=serverOnly
+  completedAt: DateTime?, scope=serverOnly
+  createdAt: DateTime?, scope=serverOnly
+  updatedAt: DateTime?, scope=serverOnly

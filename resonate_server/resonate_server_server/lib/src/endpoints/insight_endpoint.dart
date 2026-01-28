@@ -111,4 +111,23 @@ class InsightEndpoint extends Endpoint {
 
     return await Insight.db.insertRow(session, insight);
   }
+
+  /// Create a custom insight (e.g., from AI generation).
+  Future<Insight> createInsight(
+    Session session, {
+    required String insightText,
+    required String insightType,
+  }) async {
+    final profileId = await _getProfileId(session);
+
+    final insight = Insight(
+      userProfileId: profileId,
+      insightText: insightText,
+      insightType: insightType,
+      generatedAt: DateTime.now(),
+      isRead: false,
+    );
+
+    return await Insight.db.insertRow(session, insight);
+  }
 }

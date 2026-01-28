@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:resonate_server_client/resonate_server_client.dart';
 import '../../core/services/api_service.dart';
 
@@ -58,6 +61,32 @@ class VoiceEntryRepository {
 
   Client get _client => ApiService.client;
 
+  /// Upload and analyze a voice recording
+  Future<VoiceEntryWithTags> uploadAndAnalyze({
+    required String audioFilePath,
+    required String language,
+    required String privacyLevel,
+  }) async {
+    // Read audio file
+    final file = File(audioFilePath);
+    
+    if (!await file.exists()) {
+      throw Exception('Audio file does not exist: $audioFilePath');
+    }
+    
+    final bytes = await file.readAsBytes();
+    debugPrint('Audio file read: ${bytes.length} bytes');
+    
+    final audioData = ByteData.sublistView(Uint8List.fromList(bytes));
+    
+    // Upload to backend
+    return await _client.voiceEntry.uploadAndAnalyze(
+      audioData,
+      language,
+      privacyLevel,
+    );
+  }
+
   /// Get all voice entries.
   Future<List<VoiceEntryWithTags>> getEntries({int? limit}) async {
     return await _client.voiceEntry.getEntries(limit: limit);
@@ -115,6 +144,98 @@ class InsightRepository {
   /// Generate a new insight.
   Future<Insight> generateInsight() async {
     return await _client.insight.generateInsight();
+  }
+
+  /// Create a custom insight (e.g., from AI).
+  Future<Insight> createInsight({
+    required String insightText,
+    required String insightType,
+  }) async {
+    return await _client.insight.createInsight(
+      insightText: insightText,
+      insightType: insightType,
+    );
+  }
+}
+
+/// Repository for wellness features (journal, gratitude, goals, contacts).
+class WellnessRepository {
+  static WellnessRepository? _instance;
+  
+  WellnessRepository._();
+  
+  static WellnessRepository get instance {
+    _instance ??= WellnessRepository._();
+    return _instance!;
+  }
+
+  Client get _client => ApiService.client;
+
+  // ========== JOURNAL ==========
+  
+  Future<List<JournalEntry>> getJournals({int? limit}) async {
+    return await _client.wellness.getJournals(limit: limit);
+  }
+
+  Future<JournalEntry> createJournal({
+    required String content,
+    required String prompt,
+    String? moodAtTime,
+  }) async {
+    return await _client.wellness.createJournal(
+      content,
+      prompt,
+      moodAtTime: moodAtTime,
+    );
+  }
+
+  // ========== GRATITUDE ==========
+  
+  Future<List<GratitudeEntry>> getGratitudes({int? limit}) async {
+    return await _client.wellness.getGratitudes(limit: limit);
+  }
+
+  Future<GratitudeEntry> createGratitude({
+    required List<String> items,
+  }) async {
+    return await _client.wellness.createGratitude(items);
+  }
+
+  // ========== GOALS ==========
+  
+  Future<List<WellnessGoal>> getGoals() async {
+    return await _client.wellness.getGoals();
+  }
+
+  Future<WellnessGoal> createGoal({
+    required String title,
+    required String emoji,
+  }) async {
+    return await _client.wellness.createGoal(title, emoji);
+  }
+
+  Future<WellnessGoal> toggleGoal(int id) async {
+    return await _client.wellness.toggleGoal(id);
+  }
+
+  // ========== CONTACTS ==========
+  
+  Future<List<FavoriteContact>> getContacts() async {
+    return await _client.wellness.getContacts();
+  }
+
+  Future<FavoriteContact> createContact({
+    required String name,
+    required String emoji,
+    required String type,
+    String? phone,
+  }) async {
+    return await _client.wellness.createContact(
+      name,
+      emoji,
+      type,
+      phone: phone,
+    );
   }
 }
 
@@ -183,60 +304,6 @@ class TagRepository {
   /// Add tag to an entry.
   Future<bool> addTagToEntry(int entryId, int tagId) async {
     return await _client.tag.addTagToEntry(entryId, tagId);
-  }
-}
-
-/// Repository for wellness features.
-class WellnessRepository {
-  static WellnessRepository? _instance;
-  
-  WellnessRepository._();
-  
-  static WellnessRepository get instance {
-    _instance ??= WellnessRepository._();
-    return _instance!;
-  }
-
-  Client get _client => ApiService.client;
-
-  // Journal entries
-  Future<List<JournalEntry>> getJournals({int? limit}) async {
-    return await _client.wellness.getJournals(limit: limit);
-  }
-
-  Future<JournalEntry> createJournal(String content, String prompt, {String? moodAtTime}) async {
-    return await _client.wellness.createJournal(content, prompt, moodAtTime: moodAtTime);
-  }
-
-  // Gratitude entries
-  Future<List<GratitudeEntry>> getGratitudes({int? limit}) async {
-    return await _client.wellness.getGratitudes(limit: limit);
-  }
-
-  Future<GratitudeEntry> createGratitude(List<String> items) async {
-    return await _client.wellness.createGratitude(items);
-  }
-
-  // Wellness goals
-  Future<List<WellnessGoal>> getGoals() async {
-    return await _client.wellness.getGoals();
-  }
-
-  Future<WellnessGoal> createGoal(String title, String emoji) async {
-    return await _client.wellness.createGoal(title, emoji);
-  }
-
-  Future<WellnessGoal> toggleGoal(int id) async {
-    return await _client.wellness.toggleGoal(id);
-  }
-
-  // Favorite contacts
-  Future<List<FavoriteContact>> getContacts() async {
-    return await _client.wellness.getContacts();
-  }
-
-  Future<FavoriteContact> createContact(String name, String emoji, String type, {String? phone}) async {
-    return await _client.wellness.createContact(name, emoji, type, phone: phone);
   }
 }
 

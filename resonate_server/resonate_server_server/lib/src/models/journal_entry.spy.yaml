@@ -1,14 +1,10 @@
-### Journal entry for wellness reflection.
+### Journal entry for reflection and thoughts.
 class: JournalEntry
 table: journal_entries
 
 fields:
-  userProfileId: int
-  createdAt: DateTime
+  userProfileId: int?, scope=serverOnly
+  createdAt: DateTime?, scope=serverOnly
   content: String
   prompt: String
   moodAtTime: String?
-
-indexes:
-  journal_user_idx:
-    fields: userProfileId

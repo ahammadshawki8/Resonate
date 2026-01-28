@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/shared_widgets.dart';
 import '../../providers/app_providers.dart';
@@ -1628,14 +1629,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               itemBuilder: (context, index) {
                 final contact = contacts[index];
                 return GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(modalContext);
-                    ScaffoldMessenger.of(rootContext).showSnackBar(SnackBar(
-                        content: Text('📞 Calling ${contact.name}${contact.phone != null ? ' (${contact.phone})' : ''}...'),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                        duration: const Duration(seconds: 5),
-                        margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w)));
+                    
+                    // Make actual phone call if phone number exists
+                    if (contact.phone != null && contact.phone!.isNotEmpty) {
+                      final phoneUri = Uri.parse('tel:${contact.phone}');
+                      if (await canLaunchUrl(phoneUri)) {
+                        await launchUrl(phoneUri);
+                      } else {
+                        if (rootContext.mounted) {
+                          ScaffoldMessenger.of(rootContext).showSnackBar(SnackBar(
+                            content: Text('Unable to open phone dialer'),
+                            backgroundColor: Colors.red,
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 3),
+                            margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w),
+                          ));
+                        }
+                      }
+                    } else {
+                      // No phone number - show message
+                      if (rootContext.mounted) {
+                        ScaffoldMessenger.of(rootContext).showSnackBar(SnackBar(
+                          content: Text('No phone number for ${contact.name}. Add one in Manage.'),
+                          backgroundColor: Colors.orange,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 3),
+                          margin: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w),
+                        ));
+                      }
+                    }
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -1852,14 +1876,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'color': Colors.blue
       },
       {
-        'emoji': '�',
+        'emoji': '🚶‍➡️',
         'title': 'Walking',
         'duration': 10,
         'intensity': 'Low',
         'color': Colors.green
       },
       {
-        'emoji': '�💃',
+        'emoji': '💃',
         'title': 'Dance Break',
         'duration': 5,
         'intensity': 'Medium',

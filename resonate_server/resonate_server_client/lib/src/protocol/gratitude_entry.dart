@@ -13,29 +13,21 @@
 import 'package:serverpod_client/serverpod_client.dart' as _i1;
 import 'package:resonate_server_client/src/protocol/protocol.dart' as _i2;
 
-/// Gratitude entry for daily gratitude practice.
+/// Gratitude entry for positive reflection.
 abstract class GratitudeEntry implements _i1.SerializableModel {
   GratitudeEntry._({
     this.id,
-    required this.userProfileId,
-    required this.createdAt,
     required this.items,
   });
 
   factory GratitudeEntry({
     int? id,
-    required int userProfileId,
-    required DateTime createdAt,
     required List<String> items,
   }) = _GratitudeEntryImpl;
 
   factory GratitudeEntry.fromJson(Map<String, dynamic> jsonSerialization) {
     return GratitudeEntry(
       id: jsonSerialization['id'] as int?,
-      userProfileId: jsonSerialization['userProfileId'] as int,
-      createdAt: _i1.DateTimeJsonExtension.fromJson(
-        jsonSerialization['createdAt'],
-      ),
       items: _i2.Protocol().deserialize<List<String>>(
         jsonSerialization['items'],
       ),
@@ -47,10 +39,6 @@ abstract class GratitudeEntry implements _i1.SerializableModel {
   /// the id will be null.
   int? id;
 
-  int userProfileId;
-
-  DateTime createdAt;
-
   List<String> items;
 
   /// Returns a shallow copy of this [GratitudeEntry]
@@ -58,8 +46,6 @@ abstract class GratitudeEntry implements _i1.SerializableModel {
   @_i1.useResult
   GratitudeEntry copyWith({
     int? id,
-    int? userProfileId,
-    DateTime? createdAt,
     List<String>? items,
   });
   @override
@@ -67,8 +53,6 @@ abstract class GratitudeEntry implements _i1.SerializableModel {
     return {
       '__className__': 'GratitudeEntry',
       if (id != null) 'id': id,
-      'userProfileId': userProfileId,
-      'createdAt': createdAt.toJson(),
       'items': items.toJson(),
     };
   }
@@ -84,13 +68,9 @@ class _Undefined {}
 class _GratitudeEntryImpl extends GratitudeEntry {
   _GratitudeEntryImpl({
     int? id,
-    required int userProfileId,
-    required DateTime createdAt,
     required List<String> items,
   }) : super._(
          id: id,
-         userProfileId: userProfileId,
-         createdAt: createdAt,
          items: items,
        );
 
@@ -100,14 +80,10 @@ class _GratitudeEntryImpl extends GratitudeEntry {
   @override
   GratitudeEntry copyWith({
     Object? id = _Undefined,
-    int? userProfileId,
-    DateTime? createdAt,
     List<String>? items,
   }) {
     return GratitudeEntry(
       id: id is int? ? id : this.id,
-      userProfileId: userProfileId ?? this.userProfileId,
-      createdAt: createdAt ?? this.createdAt,
       items: items ?? this.items.map((e0) => e0).toList(),
     );
   }

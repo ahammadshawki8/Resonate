@@ -236,189 +236,208 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => _showExitDialog(),
-                    child: Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.cardDark : Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(Icons.close, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
-                    ),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        widget.workoutType,
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+            ),
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => _showExitDialog(),
+                        child: Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.cardDark : Colors.white,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Icon(Icons.close, size: 20.sp, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 48.w),
-                ],
-              ),
-            ),
-            
-            // Timer
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 24.w),
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: widget.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(24.r),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Time Remaining',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    _formatTime(_secondsRemaining),
-                    style: TextStyle(
-                      fontSize: 48.sp,
-                      fontWeight: FontWeight.bold,
-                      color: widget.color,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  LinearProgressIndicator(
-                    value: 1 - (_secondsRemaining / (widget.durationMinutes * 60)),
-                    backgroundColor: widget.color.withOpacity(0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(widget.color),
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                ],
-              ),
-            ),
-            
-            SizedBox(height: 24.h),
-            
-            // Current Exercise
-            Expanded(
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 24.w),
-                padding: EdgeInsets.all(32.w),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardDark : Colors.white,
-                  borderRadius: BorderRadius.circular(24.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: _isResting
-                    ? _buildRestScreen()
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            currentExercise['emoji'] as String,
-                            style: TextStyle(fontSize: 72.sp),
-                          ).animate(onPlay: (c) => c.repeat(reverse: true))
-                              .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 1000.ms),
-                          SizedBox(height: 24.h),
-                          Text(
-                            currentExercise['name'] as String,
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            widget.workoutType,
                             style: TextStyle(
-                              fontSize: 28.sp,
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.bold,
                               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                             ),
-                            textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 16.h),
-                          Text(
-                            currentExercise['instruction'] as String,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                              height: 1.5,
+                        ),
+                      ),
+                      SizedBox(width: 36.w),
+                    ],
+                  ),
+                ),
+                
+                // Timer
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 20.w),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: widget.color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Time Remaining',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        _formatTime(_secondsRemaining),
+                        style: TextStyle(
+                          fontSize: 36.sp,
+                          fontWeight: FontWeight.bold,
+                          color: widget.color,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      LinearProgressIndicator(
+                        value: 1 - (_secondsRemaining / (widget.durationMinutes * 60)),
+                        backgroundColor: widget.color.withOpacity(0.2),
+                        valueColor: AlwaysStoppedAnimation<Color>(widget.color),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 12.h),
+                
+                // Current Exercise
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 20.w),
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                  constraints: BoxConstraints(
+                    minHeight: 280.h,
+                    maxHeight: 320.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.cardDark : Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: _isResting
+                      ? _buildRestScreen()
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              currentExercise['emoji'] as String,
+                              style: TextStyle(fontSize: 56.sp),
+                            ).animate(onPlay: (c) => c.repeat(reverse: true))
+                                .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 1000.ms),
+                            SizedBox(height: 12.h),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8.w),
+                              child: Text(
+                                currentExercise['name'] as String,
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 24.h),
-                          Text(
-                            'Exercise ${_currentExerciseIndex + 1} of ${_exercises.length}',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: widget.color,
-                              fontWeight: FontWeight.w600,
+                            SizedBox(height: 10.h),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w),
+                              child: Text(
+                                currentExercise['instruction'] as String,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                  height: 1.3,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'Exercise ${_currentExerciseIndex + 1} of ${_exercises.length}',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: widget.color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+                
+                SizedBox(height: 12.h),
+                
+                // Controls
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildControlButton(
+                        Icons.skip_previous,
+                        'Previous',
+                        _previousExercise,
+                        enabled: _currentExerciseIndex > 0,
+                      ),
+                      GestureDetector(
+                        onTap: _togglePause,
+                        child: Container(
+                          width: 64.w,
+                          height: 64.w,
+                          decoration: BoxDecoration(
+                            color: widget.color,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: widget.color.withOpacity(0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-              ),
-            ),
-            
-            SizedBox(height: 24.h),
-            
-            // Controls
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildControlButton(
-                    Icons.skip_previous,
-                    'Previous',
-                    _previousExercise,
-                    enabled: _currentExerciseIndex > 0,
-                  ),
-                  GestureDetector(
-                    onTap: _togglePause,
-                    child: Container(
-                      width: 80.w,
-                      height: 80.w,
-                      decoration: BoxDecoration(
-                        color: widget.color,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: widget.color.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                          child: Icon(
+                            _isPaused ? Icons.play_arrow : Icons.pause,
+                            color: Colors.white,
+                            size: 32.sp,
                           ),
-                        ],
+                        ),
                       ),
-                      child: Icon(
-                        _isPaused ? Icons.play_arrow : Icons.pause,
-                        color: Colors.white,
-                        size: 40.sp,
+                      _buildControlButton(
+                        Icons.skip_next,
+                        'Next',
+                        _nextExercise,
+                        enabled: _currentExerciseIndex < _exercises.length - 1,
                       ),
-                    ),
+                    ],
                   ),
-                  _buildControlButton(
-                    Icons.skip_next,
-                    'Next',
-                    _nextExercise,
-                    enabled: _currentExerciseIndex < _exercises.length - 1,
-                  ),
-                ],
-              ),
+                ),
+                
+                SizedBox(height: 20.h),
+              ],
             ),
-            
-            SizedBox(height: 64.h),
-          ],
+          ),
         ),
       ),
     );
@@ -429,33 +448,39 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('💨', style: TextStyle(fontSize: 64.sp))
+        Text('💨', style: TextStyle(fontSize: 48.sp))
             .animate(onPlay: (c) => c.repeat(reverse: true))
             .scale(duration: 500.ms),
-        SizedBox(height: 24.h),
+        SizedBox(height: 12.h),
         Text(
           'Rest',
           style: TextStyle(
-            fontSize: 32.sp,
+            fontSize: 24.sp,
             fontWeight: FontWeight.bold,
             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 6.h),
         Text(
           '$_restSeconds seconds',
           style: TextStyle(
-            fontSize: 48.sp,
+            fontSize: 36.sp,
             fontWeight: FontWeight.bold,
             color: widget.color,
           ),
         ),
-        SizedBox(height: 16.h),
-        Text(
-          'Next: ${_exercises[_currentExerciseIndex + 1]['name']}',
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+        SizedBox(height: 10.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+          child: Text(
+            'Next: ${_exercises[_currentExerciseIndex + 1]['name']}',
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ),
       ],
@@ -467,10 +492,11 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 56.w,
-            height: 56.w,
+            width: 50.w,
+            height: 50.w,
             decoration: BoxDecoration(
               color: enabled
                   ? (isDark ? AppColors.cardDark : Colors.white)
@@ -482,14 +508,14 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               color: enabled
                   ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)
                   : Colors.grey,
-              size: 28.sp,
+              size: 24.sp,
             ),
           ),
           SizedBox(height: 4.h),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 11.sp,
               color: enabled
                   ? (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary)
                   : Colors.grey,

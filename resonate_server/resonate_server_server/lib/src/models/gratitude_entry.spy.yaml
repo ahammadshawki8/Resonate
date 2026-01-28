@@ -1,12 +1,8 @@
-### Gratitude entry for daily gratitude practice.
+### Gratitude entry for positive reflection.
 class: GratitudeEntry
 table: gratitude_entries
 
 fields:
-  userProfileId: int
-  createdAt: DateTime
+  userProfileId: int?, scope=serverOnly
+  createdAt: DateTime?, scope=serverOnly
   items: List<String>
-
-indexes:
-  gratitude_user_idx:
-    fields: userProfileId

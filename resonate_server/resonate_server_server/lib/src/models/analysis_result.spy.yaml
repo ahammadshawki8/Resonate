@@ -2,20 +2,22 @@
 class: AnalysisResult
 
 fields:
+  durationSeconds: double?
   pitchMean: double
   pitchStd: double
   energyMean: double
   tempo: double
   silenceRatio: double
   transcript: String?
-  sentimentScore: double
-  detectedEmotions: List<String>
-  emotionKeywords: List<String>
+  sentimentScore: double?
+  detectedEmotions: List<String>?
+  emotionKeywords: List<String>?
   topicContext: String?
   acousticMoodScore: double
-  semanticMoodScore: double
+  semanticMoodScore: double?
   finalMoodScore: double
   moodLabel: String
   confidence: double
-  signalAlignment: double
+  signalAlignment: double?
   language: String
+

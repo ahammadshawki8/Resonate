@@ -18,6 +18,7 @@ insight:
   - getUnreadCount:
   - markAsRead:
   - generateInsight:
+  - createInsight:
 settings:
   - getSettings:
   - updateSettings:

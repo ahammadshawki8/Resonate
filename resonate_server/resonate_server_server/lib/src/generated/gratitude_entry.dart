@@ -13,30 +13,30 @@
 import 'package:serverpod/serverpod.dart' as _i1;
 import 'package:resonate_server_server/src/generated/protocol.dart' as _i2;
 
-/// Gratitude entry for daily gratitude practice.
+/// Gratitude entry for positive reflection.
 abstract class GratitudeEntry
     implements _i1.TableRow<int?>, _i1.ProtocolSerialization {
   GratitudeEntry._({
     this.id,
-    required this.userProfileId,
-    required this.createdAt,
+    this.userProfileId,
+    this.createdAt,
     required this.items,
   });
 
   factory GratitudeEntry({
     int? id,
-    required int userProfileId,
-    required DateTime createdAt,
+    int? userProfileId,
+    DateTime? createdAt,
     required List<String> items,
   }) = _GratitudeEntryImpl;
 
   factory GratitudeEntry.fromJson(Map<String, dynamic> jsonSerialization) {
     return GratitudeEntry(
       id: jsonSerialization['id'] as int?,
-      userProfileId: jsonSerialization['userProfileId'] as int,
-      createdAt: _i1.DateTimeJsonExtension.fromJson(
-        jsonSerialization['createdAt'],
-      ),
+      userProfileId: jsonSerialization['userProfileId'] as int?,
+      createdAt: jsonSerialization['createdAt'] == null
+          ? null
+          : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
       items: _i2.Protocol().deserialize<List<String>>(
         jsonSerialization['items'],
       ),
@@ -50,9 +50,9 @@ abstract class GratitudeEntry
   @override
   int? id;
 
-  int userProfileId;
+  int? userProfileId;
 
-  DateTime createdAt;
+  DateTime? createdAt;
 
   List<String> items;
 
@@ -73,8 +73,8 @@ abstract class GratitudeEntry
     return {
       '__className__': 'GratitudeEntry',
       if (id != null) 'id': id,
-      'userProfileId': userProfileId,
-      'createdAt': createdAt.toJson(),
+      if (userProfileId != null) 'userProfileId': userProfileId,
+      if (createdAt != null) 'createdAt': createdAt?.toJson(),
       'items': items.toJson(),
     };
   }
@@ -84,8 +84,6 @@ abstract class GratitudeEntry
     return {
       '__className__': 'GratitudeEntry',
       if (id != null) 'id': id,
-      'userProfileId': userProfileId,
-      'createdAt': createdAt.toJson(),
       'items': items.toJson(),
     };
   }
@@ -125,8 +123,8 @@ class _Undefined {}
 class _GratitudeEntryImpl extends GratitudeEntry {
   _GratitudeEntryImpl({
     int? id,
-    required int userProfileId,
-    required DateTime createdAt,
+    int? userProfileId,
+    DateTime? createdAt,
     required List<String> items,
   }) : super._(
          id: id,
@@ -141,14 +139,14 @@ class _GratitudeEntryImpl extends GratitudeEntry {
   @override
   GratitudeEntry copyWith({
     Object? id = _Undefined,
-    int? userProfileId,
-    DateTime? createdAt,
+    Object? userProfileId = _Undefined,
+    Object? createdAt = _Undefined,
     List<String>? items,
   }) {
     return GratitudeEntry(
       id: id is int? ? id : this.id,
-      userProfileId: userProfileId ?? this.userProfileId,
-      createdAt: createdAt ?? this.createdAt,
+      userProfileId: userProfileId is int? ? userProfileId : this.userProfileId,
+      createdAt: createdAt is DateTime? ? createdAt : this.createdAt,
       items: items ?? this.items.map((e0) => e0).toList(),
     );
   }
@@ -157,12 +155,12 @@ class _GratitudeEntryImpl extends GratitudeEntry {
 class GratitudeEntryUpdateTable extends _i1.UpdateTable<GratitudeEntryTable> {
   GratitudeEntryUpdateTable(super.table);
 
-  _i1.ColumnValue<int, int> userProfileId(int value) => _i1.ColumnValue(
+  _i1.ColumnValue<int, int> userProfileId(int? value) => _i1.ColumnValue(
     table.userProfileId,
     value,
   );
 
-  _i1.ColumnValue<DateTime, DateTime> createdAt(DateTime value) =>
+  _i1.ColumnValue<DateTime, DateTime> createdAt(DateTime? value) =>
       _i1.ColumnValue(
         table.createdAt,
         value,
