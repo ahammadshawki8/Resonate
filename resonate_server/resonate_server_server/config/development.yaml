@@ -33,6 +33,7 @@ database:
   port: 5433
   name: resonate_server
   user: postgres
+  # Ensure UTF-8 encoding for Bengali text support
   #requireSsl: true # defaults to false
   #isUnixSocket: true # defaults to false
   #maxConnectionCount: 10 # Defaults to 10, a negative or null value removes the limit

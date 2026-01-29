@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -29,11 +30,24 @@ class UserProfileRepository {
   /// Update the user's profile.
   Future<UserProfile> updateProfile({
     String? displayName,
+    String? email,
     String? avatarUrl,
   }) async {
     return await _client.userProfile.updateProfile(
       displayName: displayName,
+      email: email,
       avatarUrl: avatarUrl,
+    );
+  }
+
+  /// Change the user's password.
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    return await _client.userProfile.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
     );
   }
 
@@ -146,6 +160,11 @@ class InsightRepository {
     return await _client.insight.generateInsight();
   }
 
+  /// Generate AI-powered insight using Python service.
+  Future<Insight> generateAIInsight() async {
+    return await _client.insight.generateAIInsight();
+  }
+
   /// Create a custom insight (e.g., from AI).
   Future<Insight> createInsight({
     required String insightText,
@@ -189,6 +208,10 @@ class WellnessRepository {
     );
   }
 
+  Future<bool> deleteJournal(int id) async {
+    return await _client.wellness.deleteJournal(id);
+  }
+
   // ========== GRATITUDE ==========
   
   Future<List<GratitudeEntry>> getGratitudes({int? limit}) async {
@@ -199,6 +222,10 @@ class WellnessRepository {
     required List<String> items,
   }) async {
     return await _client.wellness.createGratitude(items);
+  }
+
+  Future<bool> deleteGratitude(int id) async {
+    return await _client.wellness.deleteGratitude(id);
   }
 
   // ========== GOALS ==========
@@ -216,6 +243,10 @@ class WellnessRepository {
 
   Future<WellnessGoal> toggleGoal(int id) async {
     return await _client.wellness.toggleGoal(id);
+  }
+
+  Future<bool> deleteGoal(int id) async {
+    return await _client.wellness.deleteGoal(id);
   }
 
   // ========== CONTACTS ==========
@@ -236,6 +267,10 @@ class WellnessRepository {
       type,
       phone: phone,
     );
+  }
+
+  Future<bool> deleteContact(int id) async {
+    return await _client.wellness.deleteContact(id);
   }
 }
 
@@ -270,6 +305,36 @@ class SettingsRepository {
   /// Toggle notifications.
   Future<UserSettings> toggleNotifications(bool enabled) async {
     return await _client.settings.toggleNotifications(enabled);
+  }
+}
+
+/// Repository for user data operations (export, delete)
+class UserDataRepository {
+  static UserDataRepository? _instance;
+  
+  UserDataRepository._();
+  
+  static UserDataRepository get instance {
+    _instance ??= UserDataRepository._();
+    return _instance!;
+  }
+
+  Client get _client => ApiService.client;
+
+  /// Export all user data from the database
+  Future<Map<String, dynamic>> exportAllData() async {
+    final jsonString = await _client.userData.exportAllData();
+    return jsonDecode(jsonString) as Map<String, dynamic>;
+  }
+
+  /// Delete all user data from the database
+  Future<bool> deleteAllData() async {
+    return await _client.userData.deleteAllData();
+  }
+
+  /// Get count of user data
+  Future<Map<String, int>> getDataCounts() async {
+    return await _client.userData.getDataCounts();
   }
 }
 

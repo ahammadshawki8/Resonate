@@ -46,7 +46,7 @@ class VoiceEntryEndpoint extends Endpoint {
     // Try to call Python AI service
     AnalysisResult result;
     try {
-      result = await _callPythonService(audioData, language, privacyLevel);
+      result = await _callPythonService(session, audioData, language, privacyLevel);
       session.log('Python AI service analysis successful');
     } catch (e) {
       session.log('Python AI service failed: $e. Using mock data.', level: LogLevel.warning);
@@ -90,12 +90,15 @@ class VoiceEntryEndpoint extends Endpoint {
   
   /// Call Python AI service for analysis
   Future<AnalysisResult> _callPythonService(
+    Session session,
     ByteData audioData,
     String language,
     String privacyLevel,
   ) async {
     // Convert ByteData to Uint8List
     final bytes = audioData.buffer.asUint8List();
+    
+    session.log('Calling Python AI service: ${bytes.length} bytes, language: $language, privacy: $privacyLevel');
     
     // Create multipart request
     final request = http.MultipartRequest(
@@ -112,29 +115,53 @@ class VoiceEntryEndpoint extends Endpoint {
       ),
     );
     
-    // Add parameters
+    // Add parameters with explicit UTF-8 encoding
     request.fields['language'] = language;
     request.fields['privacy_level'] = privacyLevel;
     
-    // Send request with timeout
+    // Set headers to ensure UTF-8
+    request.headers['Accept'] = 'application/json; charset=utf-8';
+    request.headers['Accept-Charset'] = 'utf-8';
+    
+    session.log('Sending request to Python service...');
+    
+    // Send request with longer timeout (5 minutes for Whisper processing)
     final streamedResponse = await request.send().timeout(
-      const Duration(seconds: 30),
+      const Duration(minutes: 5),
       onTimeout: () {
-        throw Exception('Python service timeout');
+        session.log('Python service timeout after 5 minutes', level: LogLevel.error);
+        throw Exception('Python service timeout after 5 minutes');
       },
     );
     
     final response = await http.Response.fromStream(streamedResponse);
     
+    session.log('Python service response: ${response.statusCode}');
+    
     if (response.statusCode != 200) {
+      session.log('Python service error: ${response.statusCode} - ${response.body}', level: LogLevel.error);
       throw Exception('Python service error: ${response.statusCode} - ${response.body}');
     }
     
-    // Parse response
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    session.log('Parsing Python service response...');
+    
+    // Log raw response for debugging
+    session.log('Response body bytes length: ${response.bodyBytes.length}');
+    
+    // Parse response with explicit UTF-8 decoding
+    final responseText = utf8.decode(response.bodyBytes);
+    session.log('Decoded response text (first 200 chars): ${responseText.length > 200 ? responseText.substring(0, 200) : responseText}');
+    
+    final data = jsonDecode(responseText) as Map<String, dynamic>;
     final acoustic = data['acoustic'] as Map<String, dynamic>;
     final fusion = data['fusion'] as Map<String, dynamic>;
     final semantic = data['semantic'] as Map<String, dynamic>?;
+    
+    final transcript = semantic?['transcript'] as String?;
+    final transcriptPreview = transcript != null && transcript.length > 50 
+        ? '${transcript.substring(0, 50)}...' 
+        : transcript ?? 'none';
+    session.log('Analysis complete: mood=${fusion['mood_label']}, transcript=$transcriptPreview');
     
     return AnalysisResult(
       durationSeconds: (acoustic['duration_seconds'] as num?)?.toDouble(),

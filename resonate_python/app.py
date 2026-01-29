@@ -24,7 +24,15 @@ Config.validate()
 
 # Initialize Flask app
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False  # Enable UTF-8 for JSON responses
+app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'  # Explicit UTF-8
 CORS(app)  # Enable CORS for Flutter app
+
+# Ensure all responses use UTF-8
+@app.after_request
+def after_request(response):
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return response
 
 # Configure logging
 logging.basicConfig(
@@ -146,6 +154,11 @@ def analyze_audio():
                 }
             
             logger.info(f"Analysis complete. Mood: {fusion_result.get('mood_label')}")
+            
+            # Log transcript for debugging
+            if semantic_result and 'transcript' in semantic_result:
+                transcript = semantic_result['transcript']
+                logger.info(f"Transcript (first 50 chars): {transcript[:50] if len(transcript) > 50 else transcript}")
             
             return jsonify(response), 200
             

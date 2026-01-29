@@ -561,63 +561,112 @@ class _RecordScreenState extends ConsumerState<RecordScreen>
   }
 
   Widget _buildWaveform() {
-    // Show at least 50 bars for better visualization
     final barCount = 50;
     final dataLength = _waveformData.length;
     
-    return SizedBox(
-      height: 120.h,
-      width: double.infinity,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: List.generate(
-          barCount,
-          (index) {
-            // Calculate which data point to use
-            double height;
-            if (dataLength == 0) {
-              // No data yet, show minimal bars
-              height = 10.h;
-            } else if (index < barCount - dataLength) {
-              // Not enough data yet, show minimal bars
-              height = 10.h;
-            } else {
-              // Use actual data
-              final dataIndex = index - (barCount - dataLength);
-              height = _waveformData[dataIndex] * 100.h;
-            }
-
-            return Container(
-              margin: EdgeInsets.symmetric(horizontal: 1.5.w),
-              width: 3.w,
-              height: height.clamp(10.h, 100.h),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    AppColors.primary,
-                    AppColors.primary.withOpacity(0.6),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(2.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
+    return Container(
+      height: 140.h,
+      width: MediaQuery.of(context).size.width - 40.w,
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Glow effect background
+          Container(
+            height: 100.h,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  AppColors.primary.withOpacity(0.15),
+                  Colors.transparent,
                 ],
               ),
-            ).animate(
-              onPlay: (controller) => controller.repeat(reverse: true),
-            ).shimmer(
-              duration: 1500.ms,
-              color: Colors.white.withOpacity(0.3),
-            );
-          },
-        ),
+            ),
+          ),
+          
+          // Waveform bars
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: List.generate(
+              barCount,
+              (index) {
+                double height;
+                if (dataLength == 0) {
+                  height = 12.h;
+                } else if (index < barCount - dataLength) {
+                  height = 12.h;
+                } else {
+                  final dataIndex = index - (barCount - dataLength);
+                  height = _waveformData[dataIndex] * 80.h;
+                }
+
+                // Create mirror effect for symmetry
+                final distanceFromCenter = (index - barCount / 2).abs();
+                final symmetryFactor = 1 - (distanceFromCenter / (barCount / 2)) * 0.3;
+                height = height * symmetryFactor;
+
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 0.5.w),
+                  width: 3.w,
+                  height: height.clamp(12.h, 80.h),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.7),
+                        AppColors.primary.withOpacity(0.4),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(2.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.4),
+                        blurRadius: 6,
+                        spreadRadius: 0.5,
+                      ),
+                    ],
+                  ),
+                ).animate(
+                  onPlay: (controller) => controller.repeat(reverse: true),
+                ).shimmer(
+                  duration: (1200 + (index % 5) * 100).ms,
+                  color: Colors.white.withOpacity(0.3),
+                  angle: 90,
+                ).scale(
+                  begin: const Offset(1, 0.96),
+                  end: const Offset(1, 1.04),
+                  duration: (800 + (index % 3) * 100).ms,
+                );
+              },
+            ),
+          ),
+          
+          // Center pulse indicator
+          Container(
+            width: 6.w,
+            height: 6.w,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.6),
+                  blurRadius: 10,
+                  spreadRadius: 3,
+                ),
+              ],
+            ),
+          ).animate(onPlay: (c) => c.repeat())
+            .scale(
+              begin: const Offset(1, 1),
+              end: const Offset(1.3, 1.3),
+              duration: 1000.ms,
+            )
+            .fadeOut(duration: 1000.ms),
+        ],
       ),
     );
   }

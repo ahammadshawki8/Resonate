@@ -1447,6 +1447,12 @@ class Protocol extends _i1.SerializationManagerServer {
     if (t == List<_i30.Tag>) {
       return (data as List).map((e) => deserialize<_i30.Tag>(e)).toList() as T;
     }
+    if (t == Map<String, int>) {
+      return (data as Map).map(
+            (k, v) => MapEntry(deserialize<String>(k), deserialize<int>(v)),
+          )
+          as T;
+    }
     if (t == List<_i31.VoiceEntryWithTags>) {
       return (data as List)
               .map((e) => deserialize<_i31.VoiceEntryWithTags>(e))

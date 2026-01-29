@@ -54,6 +54,7 @@ class UserProfileEndpoint extends Endpoint {
   Future<UserProfile> updateProfile(
     Session session, {
     String? displayName,
+    String? email,
     String? avatarUrl,
   }) async {
     final authInfo = session.authenticated;
@@ -73,10 +74,34 @@ class UserProfileEndpoint extends Endpoint {
 
     final updated = profile.copyWith(
       displayName: displayName ?? profile.displayName,
+      email: email ?? profile.email,
       avatarUrl: avatarUrl ?? profile.avatarUrl,
     );
 
     return await UserProfile.db.updateRow(session, updated);
+  }
+
+  /// Change the user's password.
+  /// Note: This is a placeholder. For production, use Serverpod's built-in password reset flow.
+  Future<bool> changePassword(
+    Session session, {
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final authInfo = session.authenticated;
+    if (authInfo == null) {
+      throw Exception('Authentication required');
+    }
+
+    // For now, we'll return a message that password change is not yet implemented
+    // In production, you should use Serverpod's email identity provider password reset flow
+    session.log('Password change requested but not yet implemented');
+    
+    // TODO: Implement password change using Serverpod auth
+    // This requires accessing the EmailAuth table which is not directly exposed
+    // Recommended approach: Use the built-in password reset flow via email
+    
+    throw Exception('Password change is not yet implemented. Please use the "Forgot Password" feature.');
   }
 
   /// Get user statistics.

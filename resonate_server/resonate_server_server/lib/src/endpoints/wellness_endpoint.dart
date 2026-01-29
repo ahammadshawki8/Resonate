@@ -56,6 +56,18 @@ class WellnessEndpoint extends Endpoint {
     return await JournalEntry.db.insertRow(session, entry);
   }
 
+  Future<bool> deleteJournal(Session session, int id) async {
+    final profileId = await _getProfileId(session);
+
+    final entry = await JournalEntry.db.findById(session, id);
+    if (entry == null || entry.userProfileId != profileId) {
+      return false;
+    }
+
+    await JournalEntry.db.deleteRow(session, entry);
+    return true;
+  }
+
   // ========== GRATITUDE ENTRIES ==========
 
   Future<List<GratitudeEntry>> getGratitudes(
@@ -86,6 +98,18 @@ class WellnessEndpoint extends Endpoint {
     );
 
     return await GratitudeEntry.db.insertRow(session, entry);
+  }
+
+  Future<bool> deleteGratitude(Session session, int id) async {
+    final profileId = await _getProfileId(session);
+
+    final entry = await GratitudeEntry.db.findById(session, id);
+    if (entry == null || entry.userProfileId != profileId) {
+      return false;
+    }
+
+    await GratitudeEntry.db.deleteRow(session, entry);
+    return true;
   }
 
   // ========== WELLNESS GOALS ==========
@@ -135,6 +159,18 @@ class WellnessEndpoint extends Endpoint {
     return await WellnessGoal.db.updateRow(session, updated);
   }
 
+  Future<bool> deleteGoal(Session session, int id) async {
+    final profileId = await _getProfileId(session);
+
+    final goal = await WellnessGoal.db.findById(session, id);
+    if (goal == null || goal.userProfileId != profileId) {
+      return false;
+    }
+
+    await WellnessGoal.db.deleteRow(session, goal);
+    return true;
+  }
+
   // ========== FAVORITE CONTACTS ==========
 
   Future<List<FavoriteContact>> getContacts(Session session) async {
@@ -167,5 +203,17 @@ class WellnessEndpoint extends Endpoint {
     );
 
     return await FavoriteContact.db.insertRow(session, contact);
+  }
+
+  Future<bool> deleteContact(Session session, int id) async {
+    final profileId = await _getProfileId(session);
+
+    final contact = await FavoriteContact.db.findById(session, id);
+    if (contact == null || contact.userProfileId != profileId) {
+      return false;
+    }
+
+    await FavoriteContact.db.deleteRow(session, contact);
+    return true;
   }
 }

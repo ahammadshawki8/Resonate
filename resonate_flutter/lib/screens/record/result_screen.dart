@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../../core/theme/app_colors.dart';
 import '../../widgets/shared_widgets.dart';
 import '../../providers/app_providers.dart';
 import '../../data/models/models.dart';
+import '../../data/repositories/repositories.dart';
 
 class ResultScreen extends ConsumerStatefulWidget {
   const ResultScreen({super.key});
@@ -1011,6 +1010,10 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
     final entries = ref.read(entriesProvider);
     final entryCount = entries.length;
 
+    debugPrint('=== INSIGHT GENERATION CHECK ===');
+    debugPrint('Entry count: $entryCount');
+    debugPrint('Mood score: ${analysisResult.moodScore}');
+
     // Only generate insights at certain milestones or conditions
     bool shouldGenerate = false;
     
@@ -1020,45 +1023,38 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
       shouldGenerate = true;
     }
     
+    debugPrint('Should generate insight: $shouldGenerate');
+    
     if (!shouldGenerate) return;
     
     try {
-      // Prepare entry data for AI
-      final entryData = entries.take(10).map((e) => {
-        'final_mood_score': e.finalMoodScore,
-        'detected_emotions': e.detectedEmotions,
-        'transcript': e.transcript ?? '',
-        'recorded_at': e.recordedAt.toIso8601String(),
-      }).toList();
+      debugPrint('Calling Serverpod backend for AI insight generation...');
       
-      // Call Python AI service to generate insight
-      final response = await http.post(
-        Uri.parse('http://10.39.84.77:8001/insights/generate'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'entries': entryData}),
-      );
+      // Call backend which will call Python service and save to database
+      final insight = await InsightRepository.instance.generateAIInsight();
       
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        // Add AI-generated insight
-        ref.read(insightsProvider.notifier).addInsight(
-          Insight(
-            id: 'insight_${DateTime.now().millisecondsSinceEpoch}',
-            userId: 'user_001',
-            insightText: data['insight_text'],
-            insightType: data['insight_type'],
-            generatedAt: DateTime.now(),
-            isRead: false,
+      debugPrint('✓ AI insight generated and saved: ${insight.insightType}');
+      
+      // Refresh insights list to show the new insight
+      await ref.read(insightsProvider.notifier).fetchInsights();
+      
+      debugPrint('✓ Insights list refreshed');
+      
+      // Show a snackbar to confirm
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('✨ New insight generated!'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+            duration: const Duration(seconds: 2),
           ),
         );
-        
-        debugPrint('AI insight generated successfully');
-      } else {
-        debugPrint('Failed to generate AI insight: ${response.statusCode}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('Error generating AI insight: $e');
+      debugPrint('Stack trace: $stackTrace');
       // Silently fail - insights are not critical
     }
   }

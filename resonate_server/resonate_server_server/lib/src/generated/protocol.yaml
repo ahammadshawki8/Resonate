@@ -19,6 +19,7 @@ insight:
   - markAsRead:
   - generateInsight:
   - createInsight:
+  - generateAIInsight:
 settings:
   - getSettings:
   - updateSettings:
@@ -29,9 +30,14 @@ tag:
   - createTag:
   - deleteTag:
   - addTagToEntry:
+userData:
+  - exportAllData:
+  - deleteAllData:
+  - getDataCounts:
 userProfile:
   - getProfile:
   - updateProfile:
+  - changePassword:
   - getStats:
   - deleteAccount:
 voiceEntry:
@@ -44,12 +50,16 @@ voiceEntry:
 wellness:
   - getJournals:
   - createJournal:
+  - deleteJournal:
   - getGratitudes:
   - createGratitude:
+  - deleteGratitude:
   - getGoals:
   - createGoal:
   - toggleGoal:
+  - deleteGoal:
   - getContacts:
   - createContact:
+  - deleteContact:
 greeting:
   - hello:

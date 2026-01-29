@@ -261,6 +261,28 @@ class User {
     this.currentStreak = 0,
     this.averageMood = 0.5,
   });
+
+  User copyWith({
+    String? id,
+    String? email,
+    String? name,
+    String? avatarUrl,
+    DateTime? createdAt,
+    int? totalCheckins,
+    int? currentStreak,
+    double? averageMood,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      createdAt: createdAt ?? this.createdAt,
+      totalCheckins: totalCheckins ?? this.totalCheckins,
+      currentStreak: currentStreak ?? this.currentStreak,
+      averageMood: averageMood ?? this.averageMood,
+    );
+  }
 }
 
 class Insight {
@@ -1187,4 +1209,45 @@ class FavoriteContact {
       phone: phone ?? this.phone,
     );
   }
+}
+
+// Wellness Model Converters
+extension JournalEntryServerpodToLocal on sp.JournalEntry {
+  JournalEntry toLocal() => JournalEntry(
+    id: id.toString(),
+    createdAt: DateTime.now(), // Serverpod model doesn't have createdAt
+    content: content,
+    prompt: prompt,
+    moodAtTime: moodAtTime,
+  );
+}
+
+extension GratitudeEntryServerpodToLocal on sp.GratitudeEntry {
+  GratitudeEntry toLocal() => GratitudeEntry(
+    id: id.toString(),
+    createdAt: DateTime.now(), // Serverpod model doesn't have createdAt
+    items: items,
+  );
+}
+
+extension WellnessGoalServerpodToLocal on sp.WellnessGoal {
+  WellnessGoal toLocal() => WellnessGoal(
+    id: id.toString(),
+    createdAt: DateTime.now(), // Serverpod model doesn't have createdAt
+    title: title,
+    emoji: emoji,
+    isCompleted: isCompleted,
+    completedAt: completedAt,
+  );
+}
+
+extension FavoriteContactServerpodToLocal on sp.FavoriteContact {
+  FavoriteContact toLocal() => FavoriteContact(
+    id: id.toString(),
+    createdAt: DateTime.now(), // Serverpod model doesn't have createdAt
+    name: name,
+    emoji: emoji,
+    type: type,
+    phone: phone,
+  );
 }

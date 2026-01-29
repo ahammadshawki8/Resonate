@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -217,14 +218,141 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: widget.color),
-              SizedBox(height: 16.h),
+              // Animated music notes
+              SizedBox(
+                width: 200.w,
+                height: 200.w,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Pulsing circle
+                    Container(
+                      width: 150.w,
+                      height: 150.w,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            widget.color.withOpacity(0.3),
+                            widget.color.withOpacity(0.1),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ).animate(onPlay: (c) => c.repeat())
+                      .scale(
+                        begin: const Offset(0.8, 0.8),
+                        end: const Offset(1.2, 1.2),
+                        duration: 2000.ms,
+                      )
+                      .then()
+                      .scale(
+                        begin: const Offset(1.2, 1.2),
+                        end: const Offset(0.8, 0.8),
+                        duration: 2000.ms,
+                      ),
+                    
+                    // Center emoji
+                    Text(
+                      widget.emoji,
+                      style: TextStyle(fontSize: 64.sp),
+                    ).animate(onPlay: (c) => c.repeat())
+                      .rotate(
+                        begin: 0,
+                        end: 0.1,
+                        duration: 1000.ms,
+                      )
+                      .then()
+                      .rotate(
+                        begin: 0.1,
+                        end: -0.1,
+                        duration: 1000.ms,
+                      )
+                      .then()
+                      .rotate(
+                        begin: -0.1,
+                        end: 0,
+                        duration: 1000.ms,
+                      ),
+                    
+                    // Floating music notes
+                    ...List.generate(3, (index) {
+                      final angle = (index * 120) * 3.14159 / 180;
+                      final radius = 80.w;
+                      return Positioned(
+                        left: 100.w + radius * cos(angle) - 15.w,
+                        top: 100.w + radius * sin(angle) - 15.w,
+                        child: Text(
+                          ['🎵', '🎶', '🎼'][index],
+                          style: TextStyle(fontSize: 30.sp),
+                        ).animate(onPlay: (c) => c.repeat())
+                          .moveY(
+                            begin: 0,
+                            end: -20,
+                            duration: (1500 + index * 200).ms,
+                            curve: Curves.easeInOut,
+                          )
+                          .then()
+                          .moveY(
+                            begin: -20,
+                            end: 0,
+                            duration: (1500 + index * 200).ms,
+                            curve: Curves.easeInOut,
+                          )
+                          .fadeIn(duration: 500.ms)
+                          .fadeOut(duration: 500.ms, delay: (1000 + index * 200).ms),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              SizedBox(height: 32.h),
               Text(
                 'Loading tracks...',
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ).animate(onPlay: (c) => c.repeat())
+                .fadeIn(duration: 1000.ms)
+                .then()
+                .fadeOut(duration: 1000.ms),
+              SizedBox(height: 8.h),
+              Text(
+                'Finding the perfect sounds for you',
+                style: TextStyle(
+                  fontSize: 14.sp,
                   color: isDark ? Colors.white70 : AppColors.textSecondary,
                 ),
+              ),
+              SizedBox(height: 24.h),
+              // Animated dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(3, (index) {
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    width: 8.w,
+                    height: 8.w,
+                    decoration: BoxDecoration(
+                      color: widget.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ).animate(onPlay: (c) => c.repeat())
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.5, 1.5),
+                      duration: 600.ms,
+                      delay: (index * 200).ms,
+                    )
+                    .then()
+                    .scale(
+                      begin: const Offset(1.5, 1.5),
+                      end: const Offset(1, 1),
+                      duration: 600.ms,
+                    );
+                }),
               ),
             ],
           ),

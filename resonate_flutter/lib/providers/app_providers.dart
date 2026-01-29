@@ -176,8 +176,20 @@ class EntriesNotifier extends StateNotifier<List<VoiceEntry>> {
     state = state.map((e) => e.id == id ? entry : e).toList();
   }
 
-  void deleteEntry(String id) {
-    state = state.where((e) => e.id != id).toList();
+  Future<void> deleteEntry(String id) async {
+    // Delete from backend first
+    try {
+      final intId = int.parse(id);
+      final success = await VoiceEntryRepository.instance.deleteEntry(intId);
+      
+      if (success) {
+        // Update local state only if backend deletion succeeded
+        state = state.where((e) => e.id != id).toList();
+      }
+    } catch (e) {
+      debugPrint('Error deleting voice entry: $e');
+      rethrow;
+    }
   }
 
   VoiceEntry? getEntryById(String id) {
@@ -519,49 +531,137 @@ final analysisResultProvider = StateProvider<AnalysisResult?>((ref) => null);
 class JournalNotifier extends StateNotifier<List<JournalEntry>> {
   JournalNotifier() : super([]);
 
-  void addEntry(JournalEntry entry) {
+  Future<void> addEntry(JournalEntry entry) async {
+    // Add to local state immediately for UI responsiveness
     state = [entry, ...state];
+    
+    // Save to database asynchronously
+    try {
+      await WellnessRepository.instance.createJournal(
+        content: entry.content,
+        prompt: entry.prompt,
+        moodAtTime: entry.moodAtTime,
+      );
+    } catch (e) {
+      print('Error saving journal to database: $e');
+    }
   }
 
-  void deleteEntry(String id) {
-    state = state.where((e) => e.id != id).toList();
+  Future<void> deleteEntry(String id) async {
+    // Delete from backend first
+    try {
+      final intId = int.parse(id);
+      final success = await WellnessRepository.instance.deleteJournal(intId);
+      
+      if (success) {
+        // Update local state only if backend deletion succeeded
+        state = state.where((e) => e.id != id).toList();
+      }
+    } catch (e) {
+      debugPrint('Error deleting journal entry: $e');
+      rethrow;
+    }
+  }
+  
+  void clearAll() {
+    state = [];
+  }
+  
+  Future<void> loadEntries() async {
+    try {
+      final entries = await WellnessRepository.instance.getJournals(limit: 50);
+      state = entries.map((e) => e.toLocal()).toList();
+    } catch (e) {
+      print('Error loading journals: $e');
+    }
   }
 }
 
 final journalProvider = StateNotifierProvider<JournalNotifier, List<JournalEntry>>((ref) {
-  return JournalNotifier();
+  final notifier = JournalNotifier();
+  notifier.loadEntries(); // Load from database on init
+  return notifier;
 });
 
 /// Gratitude Entries Provider
 class GratitudeNotifier extends StateNotifier<List<GratitudeEntry>> {
   GratitudeNotifier() : super([]);
 
-  void addEntry(GratitudeEntry entry) {
+  Future<void> addEntry(GratitudeEntry entry) async {
+    // Add to local state immediately for UI responsiveness
     state = [entry, ...state];
+    
+    // Save to database asynchronously
+    try {
+      await WellnessRepository.instance.createGratitude(
+        items: entry.items,
+      );
+    } catch (e) {
+      print('Error saving gratitude to database: $e');
+    }
   }
 
-  void deleteEntry(String id) {
-    state = state.where((e) => e.id != id).toList();
+  Future<void> deleteEntry(String id) async {
+    // Delete from backend first
+    try {
+      final intId = int.parse(id);
+      final success = await WellnessRepository.instance.deleteGratitude(intId);
+      
+      if (success) {
+        // Update local state only if backend deletion succeeded
+        state = state.where((e) => e.id != id).toList();
+      }
+    } catch (e) {
+      debugPrint('Error deleting gratitude entry: $e');
+      rethrow;
+    }
+  }
+  
+  void clearAll() {
+    state = [];
+  }
+  
+  Future<void> loadEntries() async {
+    try {
+      final entries = await WellnessRepository.instance.getGratitudes(limit: 50);
+      state = entries.map((e) => e.toLocal()).toList();
+    } catch (e) {
+      print('Error loading gratitudes: $e');
+    }
   }
 }
 
 final gratitudeProvider = StateNotifierProvider<GratitudeNotifier, List<GratitudeEntry>>((ref) {
-  return GratitudeNotifier();
+  final notifier = GratitudeNotifier();
+  notifier.loadEntries(); // Load from database on init
+  return notifier;
 });
 
 /// Wellness Goals Provider
 class WellnessGoalNotifier extends StateNotifier<List<WellnessGoal>> {
   WellnessGoalNotifier() : super([]);
 
-  void addGoal(WellnessGoal goal) {
+  Future<void> addGoal(WellnessGoal goal) async {
     // Check if goal already exists (by title)
     final exists = state.any((g) => g.title == goal.title && !g.isCompleted);
     if (!exists) {
+      // Add to local state immediately for UI responsiveness
       state = [goal, ...state];
+      
+      // Save to database asynchronously
+      try {
+        await WellnessRepository.instance.createGoal(
+          title: goal.title,
+          emoji: goal.emoji,
+        );
+      } catch (e) {
+        print('Error saving goal to database: $e');
+      }
     }
   }
 
-  void toggleGoal(String id) {
+  Future<void> toggleGoal(String id) async {
+    // Update local state immediately
     state = state.map((g) {
       if (g.id == id) {
         return g.copyWith(
@@ -571,53 +671,95 @@ class WellnessGoalNotifier extends StateNotifier<List<WellnessGoal>> {
       }
       return g;
     }).toList();
+    
+    // Update database asynchronously
+    try {
+      final goalIdInt = int.tryParse(id);
+      if (goalIdInt != null) {
+        await WellnessRepository.instance.toggleGoal(goalIdInt);
+      }
+    } catch (e) {
+      print('Error toggling goal in database: $e');
+    }
   }
 
   void deleteGoal(String id) {
     state = state.where((g) => g.id != id).toList();
   }
+  
+  void clearAll() {
+    state = [];
+  }
+  
+  Future<void> loadGoals() async {
+    try {
+      final goals = await WellnessRepository.instance.getGoals();
+      state = goals.map((g) => g.toLocal()).toList();
+    } catch (e) {
+      print('Error loading goals: $e');
+    }
+  }
 }
 
 final wellnessGoalProvider = StateNotifierProvider<WellnessGoalNotifier, List<WellnessGoal>>((ref) {
-  return WellnessGoalNotifier();
+  final notifier = WellnessGoalNotifier();
+  notifier.loadGoals(); // Load from database on init
+  return notifier;
 });
 
 /// Favorite Contacts Provider
 class FavoriteContactNotifier extends StateNotifier<List<FavoriteContact>> {
-  FavoriteContactNotifier() : super(_createDefaultContacts());
-
-  static List<FavoriteContact> _createDefaultContacts() {
-    final now = DateTime.now();
-    return [
-      FavoriteContact(id: 'default_1', createdAt: now, name: 'Mom', emoji: '👩', type: 'Family'),
-      FavoriteContact(id: 'default_2', createdAt: now, name: 'Dad', emoji: '👨', type: 'Family'),
-      FavoriteContact(id: 'default_3', createdAt: now, name: 'Best Friend', emoji: '🧑‍🤝‍🧑', type: 'Friend'),
-      FavoriteContact(id: 'default_4', createdAt: now, name: 'Sibling', emoji: '👫', type: 'Family'),
-      FavoriteContact(id: 'default_5', createdAt: now, name: 'Therapist', emoji: '🧠', type: 'Professional'),
-    ];
-  }
+  FavoriteContactNotifier() : super([]);
 
   static const int maxContacts = 6;
 
   bool get canAddMore => state.length < maxContacts;
 
-  void addContact(FavoriteContact contact) {
+  Future<void> addContact(FavoriteContact contact) async {
     // Check if max contacts reached
     if (state.length >= maxContacts) return;
     // Check if contact already exists (by name)
     final exists = state.any((c) => c.name.toLowerCase() == contact.name.toLowerCase());
     if (!exists) {
+      // Add to local state immediately for UI responsiveness
       state = [contact, ...state];
+      
+      // Save to database asynchronously
+      try {
+        await WellnessRepository.instance.createContact(
+          name: contact.name,
+          emoji: contact.emoji,
+          type: contact.type,
+          phone: contact.phone,
+        );
+      } catch (e) {
+        print('Error saving contact to database: $e');
+      }
     }
   }
 
   void deleteContact(String id) {
     state = state.where((c) => c.id != id).toList();
   }
+  
+  void clearAll() {
+    state = [];
+  }
+  
+  Future<void> loadContacts() async {
+    try {
+      final contacts = await WellnessRepository.instance.getContacts();
+      state = contacts.map((c) => c.toLocal()).toList();
+    } catch (e) {
+      print('Error loading contacts: $e');
+    }
+  }
 }
 
 final favoriteContactProvider = StateNotifierProvider<FavoriteContactNotifier, List<FavoriteContact>>((ref) {
-  return FavoriteContactNotifier();
+  final notifier = FavoriteContactNotifier();
+  notifier.loadContacts(); // Load from database on init
+  return notifier;
 });
 
 /// Onboarding completion state

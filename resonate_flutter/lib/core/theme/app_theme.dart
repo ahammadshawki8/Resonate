@@ -1,14 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
+  // Get text theme with Bengali font support
+  static TextTheme _getTextTheme(Color textColor, Color secondaryColor, Color tertiaryColor) {
+    return GoogleFonts.notoSansTextTheme(
+      TextTheme(
+        displayLarge: TextStyle(
+          fontSize: 32.sp,
+          fontWeight: FontWeight.w800,
+          color: textColor,
+        ),
+        displayMedium: TextStyle(
+          fontSize: 28.sp,
+          fontWeight: FontWeight.w700,
+          color: textColor,
+        ),
+        displaySmall: TextStyle(
+          fontSize: 24.sp,
+          fontWeight: FontWeight.w700,
+          color: textColor,
+        ),
+        headlineLarge: TextStyle(
+          fontSize: 22.sp,
+          fontWeight: FontWeight.w700,
+          color: textColor,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 20.sp,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+        titleSmall: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w600,
+          color: secondaryColor,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w400,
+          color: textColor,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w400,
+          color: secondaryColor,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w400,
+          color: tertiaryColor,
+        ),
+        labelLarge: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textOnPrimary,
+        ),
+        labelMedium: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w500,
+          color: secondaryColor,
+        ),
+        labelSmall: TextStyle(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w500,
+          color: tertiaryColor,
+        ),
+      ),
+    );
+  }
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.background,
+      fontFamily: GoogleFonts.notoSans().fontFamily,
       
       // Color Scheme
       colorScheme: const ColorScheme.light(
@@ -45,97 +130,10 @@ class AppTheme {
       ),
       
       // Text Theme
-      textTheme: TextTheme(
-        displayLarge: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 32.sp,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-        ),
-        displayMedium: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 28.sp,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
-        displaySmall: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 24.sp,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
-        headlineLarge: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 22.sp,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
-        headlineMedium: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 20.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        headlineSmall: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 18.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        titleLarge: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        titleMedium: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        titleSmall: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
-        ),
-        bodyLarge: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textSecondary,
-        ),
-        bodySmall: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textTertiary,
-        ),
-        labelLarge: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textOnPrimary,
-        ),
-        labelMedium: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textSecondary,
-        ),
-        labelSmall: TextStyle(
-          // fontFamily: 'Nunito', // Using default font
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textTertiary,
-        ),
+      textTheme: _getTextTheme(
+        AppColors.textPrimary,
+        AppColors.textSecondary,
+        AppColors.textTertiary,
       ),
       
       // Elevated Button Theme
@@ -288,6 +286,7 @@ class AppTheme {
       brightness: Brightness.dark,
       primaryColor: AppColors.primaryLight,
       scaffoldBackgroundColor: AppColors.backgroundDark,
+      fontFamily: GoogleFonts.notoSans().fontFamily,
       
       // Color Scheme
       colorScheme: const ColorScheme.dark(
@@ -323,82 +322,10 @@ class AppTheme {
       ),
       
       // Text Theme
-      textTheme: TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32.sp,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimaryDark,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28.sp,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimaryDark,
-        ),
-        displaySmall: TextStyle(
-          fontSize: 24.sp,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimaryDark,
-        ),
-        headlineLarge: TextStyle(
-          fontSize: 22.sp,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimaryDark,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimaryDark,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 18.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimaryDark,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimaryDark,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimaryDark,
-        ),
-        titleSmall: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondaryDark,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textPrimaryDark,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textSecondaryDark,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textTertiaryDark,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textOnPrimary,
-        ),
-        labelMedium: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textSecondaryDark,
-        ),
-        labelSmall: TextStyle(
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textTertiaryDark,
-        ),
+      textTheme: _getTextTheme(
+        AppColors.textPrimaryDark,
+        AppColors.textSecondaryDark,
+        AppColors.textTertiaryDark,
       ),
       
       // Input Decoration Theme

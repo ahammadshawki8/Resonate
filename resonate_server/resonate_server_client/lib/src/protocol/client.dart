@@ -349,6 +349,14 @@ class EndpointInsight extends _i2.EndpointRef {
       'insightType': insightType,
     },
   );
+
+  /// Generate AI-powered insight using Python service.
+  _i3.Future<_i9.Insight> generateAIInsight() =>
+      caller.callServerEndpoint<_i9.Insight>(
+        'insight',
+        'generateAIInsight',
+        {},
+      );
 }
 
 /// Endpoint for user settings operations.
@@ -442,6 +450,38 @@ class EndpointTag extends _i2.EndpointRef {
   );
 }
 
+/// Endpoint for user data operations (export, delete, etc.)
+/// {@category Endpoint}
+class EndpointUserData extends _i2.EndpointRef {
+  EndpointUserData(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'userData';
+
+  /// Export all user data as a JSON string
+  _i3.Future<String> exportAllData() => caller.callServerEndpoint<String>(
+    'userData',
+    'exportAllData',
+    {},
+  );
+
+  /// Delete all user data from the database
+  /// This includes: voice entries, insights, journals, gratitudes, goals, contacts
+  _i3.Future<bool> deleteAllData() => caller.callServerEndpoint<bool>(
+    'userData',
+    'deleteAllData',
+    {},
+  );
+
+  /// Get count of user data (for verification)
+  _i3.Future<Map<String, int>> getDataCounts() =>
+      caller.callServerEndpoint<Map<String, int>>(
+        'userData',
+        'getDataCounts',
+        {},
+      );
+}
+
 /// Endpoint for user profile operations.
 /// {@category Endpoint}
 class EndpointUserProfile extends _i2.EndpointRef {
@@ -461,13 +501,29 @@ class EndpointUserProfile extends _i2.EndpointRef {
   /// Update the user's profile.
   _i3.Future<_i12.UserProfile> updateProfile({
     String? displayName,
+    String? email,
     String? avatarUrl,
   }) => caller.callServerEndpoint<_i12.UserProfile>(
     'userProfile',
     'updateProfile',
     {
       'displayName': displayName,
+      'email': email,
       'avatarUrl': avatarUrl,
+    },
+  );
+
+  /// Change the user's password.
+  /// Note: This is a placeholder. For production, use Serverpod's built-in password reset flow.
+  _i3.Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) => caller.callServerEndpoint<bool>(
+    'userProfile',
+    'changePassword',
+    {
+      'oldPassword': oldPassword,
+      'newPassword': newPassword,
     },
   );
 
@@ -585,6 +641,12 @@ class EndpointWellness extends _i2.EndpointRef {
     },
   );
 
+  _i3.Future<bool> deleteJournal(int id) => caller.callServerEndpoint<bool>(
+    'wellness',
+    'deleteJournal',
+    {'id': id},
+  );
+
   _i3.Future<List<_i18.GratitudeEntry>> getGratitudes({int? limit}) =>
       caller.callServerEndpoint<List<_i18.GratitudeEntry>>(
         'wellness',
@@ -598,6 +660,12 @@ class EndpointWellness extends _i2.EndpointRef {
         'createGratitude',
         {'items': items},
       );
+
+  _i3.Future<bool> deleteGratitude(int id) => caller.callServerEndpoint<bool>(
+    'wellness',
+    'deleteGratitude',
+    {'id': id},
+  );
 
   _i3.Future<List<_i19.WellnessGoal>> getGoals() =>
       caller.callServerEndpoint<List<_i19.WellnessGoal>>(
@@ -625,6 +693,12 @@ class EndpointWellness extends _i2.EndpointRef {
         {'id': id},
       );
 
+  _i3.Future<bool> deleteGoal(int id) => caller.callServerEndpoint<bool>(
+    'wellness',
+    'deleteGoal',
+    {'id': id},
+  );
+
   _i3.Future<List<_i20.FavoriteContact>> getContacts() =>
       caller.callServerEndpoint<List<_i20.FavoriteContact>>(
         'wellness',
@@ -646,6 +720,12 @@ class EndpointWellness extends _i2.EndpointRef {
       'type': type,
       'phone': phone,
     },
+  );
+
+  _i3.Future<bool> deleteContact(int id) => caller.callServerEndpoint<bool>(
+    'wellness',
+    'deleteContact',
+    {'id': id},
   );
 }
 
@@ -713,6 +793,7 @@ class Client extends _i2.ServerpodClientShared {
     insight = EndpointInsight(this);
     settings = EndpointSettings(this);
     tag = EndpointTag(this);
+    userData = EndpointUserData(this);
     userProfile = EndpointUserProfile(this);
     voiceEntry = EndpointVoiceEntry(this);
     wellness = EndpointWellness(this);
@@ -732,6 +813,8 @@ class Client extends _i2.ServerpodClientShared {
 
   late final EndpointTag tag;
 
+  late final EndpointUserData userData;
+
   late final EndpointUserProfile userProfile;
 
   late final EndpointVoiceEntry voiceEntry;
@@ -750,6 +833,7 @@ class Client extends _i2.ServerpodClientShared {
     'insight': insight,
     'settings': settings,
     'tag': tag,
+    'userData': userData,
     'userProfile': userProfile,
     'voiceEntry': voiceEntry,
     'wellness': wellness,

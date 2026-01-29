@@ -1,10 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/app_providers.dart';
+import '../../data/repositories/repositories.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -197,14 +202,13 @@ class ProfileScreen extends ConsumerWidget {
                     _buildSettingsItem(
                       icon: Icons.download_outlined,
                       title: 'Export My Data',
-                      onTap: () =>
-                          _showSnackBar(context, 'Data export coming soon'),
+                      onTap: () => _exportData(context, ref),
                     ),
                     _buildSettingsItem(
                       icon: Icons.delete_outline,
                       title: 'Delete All Data',
                       titleColor: Colors.red,
-                      onTap: () => _showDeleteConfirmation(context, ref),
+                      onTap: () => _showDeleteAllDataConfirmation(context, ref),
                     ),
                   ]).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1, end: 0),
 
@@ -458,37 +462,91 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showEditProfileDialog(BuildContext context, WidgetRef ref) {
-    final nameController =
-        TextEditingController(text: ref.read(currentUserProvider)?.name ?? '');
+    final user = ref.read(currentUserProvider);
+    final nameController = TextEditingController(text: user?.name ?? '');
+    final emailController = TextEditingController(text: user?.email ?? '');
+    bool isLoading = false;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        title: const Text('Edit Profile'),
-        content: TextField(
-          controller: nameController,
-          decoration: InputDecoration(
-            labelText: 'Name',
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          title: const Text('Edit Profile'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Display Name',
+                  prefixIcon: const Icon(Icons.person_outline),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ],
           ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      setState(() => isLoading = true);
+                      try {
+                        await UserProfileRepository.instance.updateProfile(
+                          displayName: nameController.text.trim(),
+                          email: emailController.text.trim(),
+                        );
+                        
+                        // Refresh user profile by fetching it again
+                        final updatedProfile = await UserProfileRepository.instance.getProfile();
+                        
+                        // Update the auth state with new profile
+                        final currentAuth = ref.read(authProvider);
+                        if (currentAuth.user != null) {
+                          ref.read(authProvider.notifier).state = currentAuth.copyWith(
+                            user: currentAuth.user!.copyWith(
+                              name: updatedProfile.displayName,
+                              email: updatedProfile.email,
+                            ),
+                          );
+                        }
+                        
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          _showSnackBar(context, '✓ Profile updated successfully!');
+                        }
+                      } catch (e) {
+                        setState(() => isLoading = false);
+                        if (context.mounted) {
+                          _showSnackBar(context, 'Failed to update profile: $e');
+                        }
+                      }
+                    },
+              child: isLoading
+                  ? SizedBox(
+                      width: 16.w,
+                      height: 16.w,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              // In real app, update profile
-              Navigator.pop(context);
-              _showSnackBar(context, 'Profile updated');
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }
@@ -535,6 +593,358 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    try {
+      print('Export started');
+      
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+            backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                ? AppColors.cardDark 
+                : Colors.white,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: AppColors.primary),
+                SizedBox(height: 16.h),
+                Text(
+                  'Exporting your data...',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Fetch all data from server
+      print('Fetching data from server...');
+      final exportData = await UserDataRepository.instance.exportAllData();
+      
+      print('Data fetched successfully: ${exportData.keys}');
+
+      // Convert to JSON
+      final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
+      
+      print('Getting directory');
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${directory.path}/resonate_export_$timestamp.json';
+      
+      print('Writing file to: $filePath');
+      final file = File(filePath);
+      await file.writeAsString(jsonString);
+      
+      print('File written successfully');
+
+      // Close loading dialog - use Navigator.of with rootNavigator
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      // Small delay to ensure dialog is closed
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Share the file
+      print('Sharing file...');
+      final result = await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'Resonate Data Export',
+        text: 'My Resonate wellness data export from ${DateTime.now().toString().split(' ')[0]}',
+      );
+
+      print('Share result: ${result.status}');
+
+      if (context.mounted) {
+        if (result.status == ShareResultStatus.success) {
+          _showSnackBar(context, '✓ Data exported successfully!');
+        } else {
+          _showSnackBar(context, 'Export saved to: $filePath');
+        }
+      }
+    } catch (e, stackTrace) {
+      print('Export error: $e');
+      print('Stack trace: $stackTrace');
+      
+      // Close loading dialog if still open - try multiple times to be sure
+      try {
+        if (context.mounted) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+      } catch (popError) {
+        print('Error closing dialog: $popError');
+      }
+      
+      // Small delay before showing error dialog
+      await Future.delayed(const Duration(milliseconds: 200));
+      
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+            title: const Text('Export Error'),
+            content: Text('Failed to export data: $e'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  void _showDeleteAllDataConfirmation(BuildContext context, WidgetRef ref) {
+    final TextEditingController confirmController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28.sp),
+            SizedBox(width: 12.w),
+            const Text('Delete All Data?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This will permanently delete:',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            _buildDeleteItem('All voice entries and recordings'),
+            _buildDeleteItem('All AI insights and patterns'),
+            _buildDeleteItem('Journal entries and gratitude lists'),
+            _buildDeleteItem('Wellness goals and contacts'),
+            _buildDeleteItem('Your mood history and analytics'),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.red, size: 20.sp),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      'This action cannot be undone!',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Type "DELETE" to confirm:',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            TextField(
+              controller: confirmController,
+              decoration: InputDecoration(
+                hintText: 'DELETE',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              if (confirmController.text.trim() == 'DELETE') {
+                Navigator.pop(context);
+                _deleteAllData(context, ref);
+              } else {
+                _showSnackBar(context, 'Please type "DELETE" to confirm');
+              }
+            },
+            child: const Text(
+              'Delete Everything',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteItem(String text) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Row(
+        children: [
+          Icon(Icons.close, color: Colors.red, size: 16.sp),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteAllData(BuildContext context, WidgetRef ref) async {
+    try {
+      print('Starting delete all data...');
+      
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+            backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                ? AppColors.cardDark 
+                : Colors.white,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: Colors.red),
+                SizedBox(height: 16.h),
+                Text(
+                  'Deleting all data...',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Delete from database via backend
+      print('Calling backend to delete data...');
+      final success = await UserDataRepository.instance.deleteAllData();
+      
+      if (!success) {
+        throw Exception('Failed to delete data from server');
+      }
+      
+      print('Data deleted from database');
+
+      // Clear all data from providers (local state)
+      print('Clearing local state...');
+      ref.read(entriesProvider.notifier).clearAll();
+      ref.read(insightsProvider.notifier).clearAll();
+      ref.read(journalProvider.notifier).clearAll();
+      ref.read(gratitudeProvider.notifier).clearAll();
+      ref.read(wellnessGoalProvider.notifier).clearAll();
+      ref.read(favoriteContactProvider.notifier).clearAll();
+
+      print('Data cleared from local state');
+
+      // Close loading dialog
+      if (context.mounted) Navigator.pop(context);
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12.w),
+                const Expanded(child: Text('All data has been permanently deleted')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      
+      print('Delete completed successfully');
+    } catch (e, stackTrace) {
+      print('Delete error: $e');
+      print('Stack trace: $stackTrace');
+      
+      // Close loading dialog if still open
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+            title: const Text('Delete Failed'),
+            content: Text('Failed to delete data: $e'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
@@ -846,75 +1256,137 @@ class ProfileScreen extends ConsumerWidget {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
+    bool isLoading = false;
+    bool obscureCurrentPassword = true;
+    bool obscureNewPassword = true;
+    bool obscureConfirmPassword = true;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        title: const Text('Change Password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Current Password',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          title: const Text('Change Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: currentPasswordController,
+                obscureText: obscureCurrentPassword,
+                decoration: InputDecoration(
+                  labelText: 'Current Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () => setState(() => obscureCurrentPassword = !obscureCurrentPassword),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
                 ),
+              ),
+              SizedBox(height: 12.h),
+              TextField(
+                controller: newPasswordController,
+                obscureText: obscureNewPassword,
+                decoration: InputDecoration(
+                  labelText: 'New Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () => setState(() => obscureNewPassword = !obscureNewPassword),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                ),
+              ),
+              SizedBox(height: 12.h),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: obscureConfirmPassword,
+                decoration: InputDecoration(
+                  labelText: 'Confirm New Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () => setState(() => obscureConfirmPassword = !obscureConfirmPassword),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Password must be at least 8 characters',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'New Password',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Confirm New Password',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-              ),
+            TextButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      // Validate inputs
+                      if (currentPasswordController.text.isEmpty) {
+                        _showSnackBar(context, 'Please enter your current password');
+                        return;
+                      }
+                      if (newPasswordController.text.length < 8) {
+                        _showSnackBar(context, 'New password must be at least 8 characters');
+                        return;
+                      }
+                      if (newPasswordController.text != confirmPasswordController.text) {
+                        _showSnackBar(context, 'Passwords do not match');
+                        return;
+                      }
+
+                      setState(() => isLoading = true);
+                      try {
+                        await UserProfileRepository.instance.changePassword(
+                          oldPassword: currentPasswordController.text,
+                          newPassword: newPasswordController.text,
+                        );
+                        
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          _showSnackBar(context, '✓ Password changed successfully!');
+                        }
+                      } catch (e) {
+                        setState(() => isLoading = false);
+                        if (context.mounted) {
+                          final errorMessage = e.toString().contains('not yet implemented')
+                              ? 'Password change is not yet available. Please use "Forgot Password" on the login screen.'
+                              : 'Failed to change password: $e';
+                          _showSnackBar(context, errorMessage);
+                        }
+                      }
+                    },
+              child: isLoading
+                  ? SizedBox(
+                      width: 16.w,
+                      height: 16.w,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      'Change',
+                      style: TextStyle(color: AppColors.primary),
+                    ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              if (newPasswordController.text ==
-                  confirmPasswordController.text) {
-                Navigator.pop(context);
-                _showSnackBar(context, 'Password changed successfully! ✓');
-              } else {
-                _showSnackBar(context, 'Passwords do not match');
-              }
-            },
-            child: Text(
-              'Change',
-              style: TextStyle(color: AppColors.primary),
-            ),
-          ),
-        ],
       ),
     );
   }

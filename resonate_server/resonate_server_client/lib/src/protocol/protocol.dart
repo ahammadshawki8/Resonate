@@ -298,6 +298,12 @@ class Protocol extends _i1.SerializationManager {
     if (t == List<_i27.Tag>) {
       return (data as List).map((e) => deserialize<_i27.Tag>(e)).toList() as T;
     }
+    if (t == Map<String, int>) {
+      return (data as Map).map(
+            (k, v) => MapEntry(deserialize<String>(k), deserialize<int>(v)),
+          )
+          as T;
+    }
     if (t == List<_i28.VoiceEntryWithTags>) {
       return (data as List)
               .map((e) => deserialize<_i28.VoiceEntryWithTags>(e))
