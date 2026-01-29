@@ -47,11 +47,13 @@ English and Bengali (বাংলা) supported, with more languages coming soon
 
 ## How we built it
 
-![architecture diagram]()
+![architecture diagram](https://raw.githubusercontent.com/ahammadshawki8/Resonate/refs/heads/main/posters/arch.png)
 
 - Flutter app for recording, UI, and offline use
 - Serverpod backend for secure data and authentication
 - Python AI service for voice analysis and insights
+- Postgres database for storing entries and user data
+
 
 
 **What’s innovative:**
