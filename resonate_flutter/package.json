@@ -1,0 +1,21 @@
+{
+  "name": "resonate_flutter",
+  "version": "1.0.0",
+  "description": "samples, guidance on mobile development, and a full API reference.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahammadshawki8/Resonate.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
