@@ -27,11 +27,8 @@ void main() async {
   // Try to initialize the Serverpod API service
   // Falls back to demo mode if server is not available
   try {
-    // Use hosted server for all platforms
-    final serverUrl = kIsWeb || Platform.isWindows
-        ? 'https://resonate-vucn.onrender.com/'
-        : 'http://10.39.84.77:8080/'; // Your PC's IP address
-    
+    // Always use hosted server for all platforms
+    final serverUrl = 'https://resonate-vucn.onrender.com/';
     await ApiService.initialize(serverUrl: serverUrl);
     useBackend = true;
     debugPrint('✓ Connected to Serverpod backend at $serverUrl');
