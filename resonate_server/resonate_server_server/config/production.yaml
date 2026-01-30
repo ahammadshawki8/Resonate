@@ -39,9 +39,10 @@ database:
 # If you are connecting on a public IP (e.g. on AWS or Google Cloud Run), you
 # connect on the public IP of the database e.g. redis.examplepod.com.
 redis:
-  enabled: false
-  host: redis.private-production.examplepod.com
+  enabled: true
+  host: mint-impala-52742.upstash.io
   port: 6379
+  requireSsl: true
   #user: # defaults to empty
   #requireSsl: true # defaults to false
 
