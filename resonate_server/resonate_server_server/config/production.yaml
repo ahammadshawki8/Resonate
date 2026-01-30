@@ -1,3 +1,9 @@
+# Use Upstash Redis TCP for all environments
+redis:
+  enabled: true
+  host: mint-impala-52742.upstash.io
+  port: 6379
+  requireSsl: true
 # Redis configuration for Upstash TCP
 redis:
   enabled: true

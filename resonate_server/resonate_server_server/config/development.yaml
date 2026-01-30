@@ -37,10 +37,9 @@ database:
 # This is the setup for Redis.
 redis:
   enabled: true
-  host: localhost
+  host: mint-impala-52742.upstash.io
   port: 6379
-  #user: # defaults to empty
-  #requireSsl: true # defaults to false
+  requireSsl: true
 
 maxRequestSize: 524288 # The maximum size of requests allowed in bytes
 

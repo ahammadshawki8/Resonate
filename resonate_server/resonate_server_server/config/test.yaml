@@ -37,11 +37,10 @@ database:
 
 # This is the setup for your Redis test instance.
 redis:
-  enabled: false
-  host: localhost
-  port: 9091
-  #user: # defaults to empty
-  #requireSsl: true # defaults to false
+  enabled: true
+  host: mint-impala-52742.upstash.io
+  port: 6379
+  requireSsl: true
 
 sessionLogs:
   persistentEnabled: true

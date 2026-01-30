@@ -43,11 +43,10 @@ database:
 # If you are connecting on a public IP (e.g. on AWS or Google Cloud Run), you
 # connect on the public IP of the database e.g. redis-staging.examplepod.com.
 redis:
-  enabled: false
-  host: redis.private-staging.examplepod.com
+  enabled: true
+  host: mint-impala-52742.upstash.io
   port: 6379
-  #user: # defaults to empty
-  #requireSsl: true # defaults to false
+  requireSsl: true
 
 maxRequestSize: 524288 # The maximum size of requests allowed in bytes
 
