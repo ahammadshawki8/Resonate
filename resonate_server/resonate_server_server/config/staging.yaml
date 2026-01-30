@@ -33,7 +33,7 @@ database:
   host: dpg-d5tq1lqli9vc73a0gbq0-a
   port: 5432
   name: resonate_db_tjbk
-  user: resonate_db_tjbk_user
+  user: resonatedb_u99l_user
   requireSsl: true
   #isUnixSocket: true # defaults to false
   #maxConnectionCount: 10 # Defaults to 10, a negative or null value removes the limit
