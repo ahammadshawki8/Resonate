@@ -107,7 +107,9 @@ This guide explains how to host all three components of your Resonate app (Flutt
 ---
 
 ## 4. Connect All Services
-- Update your Flutter app's API URLs to point to your deployed Serverpod and Python endpoints
+- Update your Flutter app's API URLs to:
+   - Serverpod backend: https://resonate-vucn.onrender.com
+   - Python AI service: https://resonate-1.onrender.com
 - Make sure CORS is enabled on your backend and Python services
 - Test all endpoints from your deployed frontend
 
