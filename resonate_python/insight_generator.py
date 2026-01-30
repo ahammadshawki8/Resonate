@@ -16,13 +16,12 @@ class InsightGenerator:
     
     def __init__(self):
         """Initialize Groq client"""
-        api_key = os.getenv('GROQ_API_KEY')
-        if not api_key:
-            logger.warning("GROQ_API_KEY not found. Insight generation will be limited.")
-            self.client = None
-        else:
-            self.client = Groq(api_key=api_key)
+        try:
+            self.client = Groq()
             logger.info("Insight generator initialized with Groq AI")
+        except Exception as e:
+            logger.warning(f"Groq client initialization failed: {e}")
+            self.client = None
     
     def generate_insight(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
