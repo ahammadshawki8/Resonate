@@ -6,7 +6,7 @@ import '../generated/protocol.dart';
 
 /// Endpoint for insights operations.
 class InsightEndpoint extends Endpoint {
-  static const String _pythonServiceUrl = 'http://localhost:8001';
+  static const String _pythonServiceUrl = 'https://resonate-vole.onrender.com';
 
   Future<int> _getProfileId(Session session) async {
     final authInfo = session.authenticated;

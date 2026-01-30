@@ -11,7 +11,7 @@ class VoiceEntryEndpoint extends Endpoint {
   final _random = Random();
   
   // Python AI service URL
-  static const String _pythonServiceUrl = 'http://localhost:8001';
+  static const String _pythonServiceUrl = 'https://resonate-vole.onrender.com';
 
   /// Helper to get user profile ID
   Future<int> _getProfileId(Session session) async {

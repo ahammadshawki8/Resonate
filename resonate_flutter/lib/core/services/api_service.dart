@@ -18,7 +18,7 @@ class ApiService {
   /// Initialize the API service with the server URL.
   /// Also initializes the auth session manager.
   static Future<void> initialize({String? serverUrl}) async {
-    _serverUrl = serverUrl ?? 'http://localhost:8080/';
+    _serverUrl = serverUrl ?? 'https://resonate-vucn.onrender.com/';
     
     // Create client with FlutterConnectivityMonitor and longer timeout
     _client = Client(

@@ -9,7 +9,7 @@ from io import BytesIO
 import numpy as np
 import soundfile as sf
 
-BASE_URL = "http://localhost:8001"
+BASE_URL = "https://resonate-vole.onrender.com"
 
 
 def create_test_audio():

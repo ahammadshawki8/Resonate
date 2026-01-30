@@ -27,9 +27,9 @@ void main() async {
   // Try to initialize the Serverpod API service
   // Falls back to demo mode if server is not available
   try {
-    // Use PC's IP address for Android devices, localhost for web/desktop
+    // Use hosted server for all platforms
     final serverUrl = kIsWeb || Platform.isWindows
-        ? 'http://localhost:8080/'
+        ? 'https://resonate-vucn.onrender.com/'
         : 'http://10.39.84.77:8080/'; // Your PC's IP address
     
     await ApiService.initialize(serverUrl: serverUrl);
