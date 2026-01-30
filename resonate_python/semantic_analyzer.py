@@ -4,6 +4,7 @@ Extracts meaning from what the user says
 """
 
 import logging
+import os
 import requests
 from textblob import TextBlob
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
