@@ -40,9 +40,7 @@ database:
 # connect on the public IP of the database e.g. redis.examplepod.com.
 redis:
   enabled: true
-  host: mint-impala-52742.upstash.io
-  port: 6379
-  requireSsl: true
+  # For Upstash Redis, do not set host/port. Serverpod will use redis_url and redis token from passwords.yaml.
   #user: # defaults to empty
   #requireSsl: true # defaults to false
 
