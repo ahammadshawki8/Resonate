@@ -4,7 +4,7 @@ Extracts meaning from what the user says
 """
 
 import logging
-import whisper
+import requests
 from textblob import TextBlob
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from emotion_keywords import EMOTION_KEYWORDS
@@ -18,12 +18,10 @@ class SemanticAnalyzer:
     def __init__(self):
         """Initialize semantic analysis models"""
         self.vader = SentimentIntensityAnalyzer()
-        
-        # Load Whisper model (use config value for minimal memory)
         from config import Config
-        logger.info(f"Loading Whisper model ({Config.WHISPER_MODEL})...")
-        self.whisper_model = whisper.load_model(Config.WHISPER_MODEL)
-        logger.info(f"Semantic analyzer initialized with Whisper STT ({Config.WHISPER_MODEL})")
+        self.openai_api_key = getattr(Config, 'OPENAI_API_KEY', None) or os.getenv('OPENAI_API_KEY')
+        if not self.openai_api_key:
+            logger.warning("OPENAI_API_KEY not set. Whisper API transcription will fail.")
     
     def analyze(self, audio_path, language='en'):
         """
@@ -81,27 +79,33 @@ class SemanticAnalyzer:
             return {'transcript': '', 'language': language, 'error': str(e)}
     
     def _transcribe_audio(self, audio_path, language='en'):
-        """Transcribe audio using Whisper"""
+        """Transcribe audio using OpenAI Whisper API"""
         try:
-            logger.info(f"Transcribing audio with Whisper (language: {language})...")
-            
-            # Map language codes
-            whisper_lang = 'bn' if language == 'bn' else 'en'
-            
-            # Transcribe with Whisper
-            result = self.whisper_model.transcribe(
-                audio_path,
-                language=whisper_lang,
-                fp16=False  # Use fp32 for CPU compatibility
-            )
-            
-            transcript = result['text'].strip()
-            logger.info(f"Transcription complete: {len(transcript)} characters")
-            
-            return transcript
-            
+            logger.info(f"Transcribing audio with OpenAI Whisper API (language: {language})...")
+            if not self.openai_api_key:
+                logger.error("OPENAI_API_KEY not set. Cannot transcribe.")
+                return ""
+            with open(audio_path, 'rb') as audio_file:
+                files = {'file': audio_file}
+                data = {
+                    'model': 'whisper-1',
+                    'language': language
+                }
+                headers = {
+                    'Authorization': f'Bearer {self.openai_api_key}'
+                }
+                response = requests.post(
+                    'https://api.openai.com/v1/audio/transcriptions',
+                    files=files,
+                    data=data,
+                    headers=headers
+                )
+                response.raise_for_status()
+                transcript = response.json().get('text', '').strip()
+                logger.info(f"Transcription complete: {len(transcript)} characters")
+                return transcript
         except Exception as e:
-            logger.error(f"Whisper transcription error: {str(e)}")
+            logger.error(f"OpenAI Whisper API transcription error: {str(e)}")
             return ""
     
     def _analyze_sentiment(self, text):

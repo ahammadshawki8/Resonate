@@ -3,9 +3,6 @@
 flask==3.0.2
 flask-cors==4.0.0
 python-dotenv==1.0.1
-openai-whisper==20231117
-torch==2.1.2
-torchaudio==2.1.2
 requests==2.31.0
 textblob==0.18.0
 vaderSentiment==3.3.2
