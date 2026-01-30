@@ -19,10 +19,11 @@ class SemanticAnalyzer:
         """Initialize semantic analysis models"""
         self.vader = SentimentIntensityAnalyzer()
         
-        # Load Whisper model (base is good balance of speed/accuracy)
-        logger.info("Loading Whisper model (base)...")
-        self.whisper_model = whisper.load_model("base")
-        logger.info("Semantic analyzer initialized with Whisper STT")
+        # Load Whisper model (use config value for minimal memory)
+        from config import Config
+        logger.info(f"Loading Whisper model ({Config.WHISPER_MODEL})...")
+        self.whisper_model = whisper.load_model(Config.WHISPER_MODEL)
+        logger.info(f"Semantic analyzer initialized with Whisper STT ({Config.WHISPER_MODEL})")
     
     def analyze(self, audio_path, language='en'):
         """

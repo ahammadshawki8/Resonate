@@ -28,7 +28,7 @@ class Config:
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     
     # Whisper Model
-    WHISPER_MODEL = 'base'  # Options: tiny, base, small, medium, large
+    WHISPER_MODEL = 'tiny'  # Options: tiny, base, small, medium, large
     
     # Groq Model
     GROQ_MODEL = 'llama-3.3-70b-versatile'
