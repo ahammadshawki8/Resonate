@@ -38,9 +38,6 @@ database:
 # configuration is to connect on a private IP address.
 # If you are connecting on a public IP (e.g. on AWS or Google Cloud Run), you
 # connect on the public IP of the database e.g. redis.examplepod.com.
-redis:
-  enabled: true
-  # For Upstash Redis, do not set host/port. Serverpod will use redis_url and redis token from passwords.yaml.
   #user: # defaults to empty
   #requireSsl: true # defaults to false
 
