@@ -18,5 +18,5 @@ COPY . .
 EXPOSE 8080
 
 
-# Start the server
-CMD ["dart", "bin/main.dart"]
+# Start the server and apply migrations
+CMD ["dart", "bin/main.dart", "--apply-migrations"]
